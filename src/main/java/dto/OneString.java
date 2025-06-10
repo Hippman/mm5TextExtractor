@@ -19,4 +19,11 @@ public class OneString {
     public OneString() {
         offsets = new ArrayList<>();
     }
+
+    public Boolean isDB() {
+        if (offsets == null || offsets.isEmpty()) {
+            return false;
+        }
+        return offsets.get(0).getType() == OffsetType.DB;
+    }
 }
