@@ -4,7 +4,7 @@ public class Application {
 
     private static final String extractText="extract";
     private static final String compressText="compress";
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         if(args.length<2){
             System.out.println("Use for extract or compress texts from/to xeen.dat\nextractor.jar [XEEN.DAT path] [extract|compress] [xeen.dat.xls path] [out XEEN.DAT path]");
             System.exit(0);

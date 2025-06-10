@@ -16,6 +16,17 @@ public class OneString {
     private List<Offset> offsets;
     private Boolean needRewrite;
 
+    private byte[] oldBytes;
+    private byte[] newBytes;
+
+    public int getNewSize(){
+        if(newBytes!=null){
+            return newBytes.length;
+        }
+        return 0;
+    }
+
+
     public OneString() {
         offsets = new ArrayList<>();
     }

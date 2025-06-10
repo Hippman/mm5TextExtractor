@@ -2,6 +2,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dto.Offset;
 import dto.OneString;
+import dto.TextInterval;
 import org.apache.commons.lang3.ArrayUtils;
 
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -14,6 +15,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -21,7 +23,7 @@ import java.util.stream.IntStream;
 public class DataCompressor {
     private int firstOffset = 0x5c310;
 
-    public void compressTexts(File dat, File xls, String outFilename) throws IOException {
+    public void compressTexts(File dat, File xls, String outFilename) throws Exception {
         byte[] exe = FileUtils.readAllBytes(dat);
         List<OneString> stringsDb = new ArrayList<>();
         List<OneString> stringsPrintf = new ArrayList<>();
@@ -71,23 +73,23 @@ public class DataCompressor {
     private void processDb(byte[] exe, List<OneString> dbStrings, Integer curOffset) throws UnsupportedEncodingException {
         for (OneString str : dbStrings) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            str.setText(str.getText());
             DataUtils.string2bytes(str.getText(), baos);
-            str.setText(str.getText());
-            byte[] bytes = baos.toByteArray();
+            str.setNewBytes(strToByte(str.getText()));
             if (str.getOldtext().length() >= str.getText().length() &&
                     str.getOldtext().equals(str.getText())) {
                 //можно перезаписать старую строку
-                overwrite(exe, bytes, str.getGlobalPosition());
+                overwrite(exe, str.getNewBytes(), str.getGlobalPosition());
             } else {
                 //надо дописать в конец
                 if (str.getNeedRewrite()) {
-                    overwrite(exe, bytes, curOffset);
+                    overwrite(exe, str.getNewBytes(), curOffset);
                     byte[] pointer = DataUtils.calcDbPointer(curOffset);
                     for (Offset offs : str.getOffsets()) {
                         overwrite(exe, pointer, offs.getOffset());
                     }
-                    curOffset += bytes.length;
+                    System.out.println(String.format("DB [%s] передвинута", str.getText()));
+
+                    curOffset += str.getNewBytes().length;
 
                 } else {
                     System.out.println(
@@ -98,24 +100,65 @@ public class DataCompressor {
         }
     }
 
-    private void processPrintf(byte[] exe, List<OneString> printfStrings) throws UnsupportedEncodingException {
+    private void processPrintf(byte[] exe, List<OneString> printfStrings) throws Exception {
+        List<TextInterval> intervals = new ArrayList<>();
+        //Соберем список свободных интервалов
         for (OneString str : printfStrings) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            str.setText(str.getText());
             DataUtils.string2bytes(str.getText(), baos);
-            str.setText(str.getText());
+            str.setOldBytes(strToByte(str.getOldtext()));
+            str.setNewBytes(strToByte(str.getText()));
 
-            byte[] bytes = baos.toByteArray();
+            TextInterval interval = new TextInterval(str.getGlobalPosition(), str.getOldBytes().length);
+            if (intervals.isEmpty()) {
+                intervals.add(interval);
+            } else {
+                Boolean status = intervals.stream().map(i -> i.unityIntervals(interval)).filter(s -> s).findAny().orElse(false);
+                if (!status) {
+                    intervals.add(interval);
+                }
+            }
+        }
+        //Отсортируем интервалы по убыванию объема
+        intervals = sortIntervals(intervals);
 
-            if (str.getOldtext().length() >= str.getText().length()) {
+        //отсортируем строки по уменьшению размера нового текста
+        printfStrings = printfStrings.stream().sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
+        //перераспределим строки
+        for (OneString str : printfStrings) {
+            byte[] pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
+            TextInterval interval = intervals.stream().filter(i -> i.getSize() >= str.getNewSize()).findFirst().orElse(null);
+            if (interval == null) {
+                System.out.println(
+                        String.format("русская Printf строка не влезает ни в один из интервалов. Смещение указателя - %d; Длина - %d; Оригинал -  %s",
+                                str.getOffsets().get(0).getOffset(), str.getOldtext().length(), str.getOldtext()));
+                throw (new Exception("Не хватает места"));
+            }
+            if (str.getGlobalPosition() != interval.getStart()) {
+                System.out.println(String.format("Строка [%s] передвинута", str.getText()));
+            }
+            str.setGlobalPosition(interval.getStart());
+            interval.shrinkFromStart(str.getNewSize());
+            intervals = sortIntervals(intervals);
+            pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
+            for (Offset offs : str.getOffsets()) {
+                overwrite(exe, pointer, offs.getOffset());
+            }
+            overwrite(exe, str.getNewBytes(), str.getGlobalPosition());
+        }
+        int a = 1;
+            /*if (str.getOldtext().length() >= str.getText().length()) {
                 //можно перезаписать старую строку
-                overwrite(exe, bytes, str.getGlobalPosition());
+                overwrite(exe, str.getOldBytes(), str.getGlobalPosition());
             } else {
                 System.out.println(
                         String.format("русская Printf строка длинее чем оригинал. Смещение указателя - %d; Длина - %d; Оригинал -  %s",
                                 str.getOffsets().get(0).getOffset(), str.getOldtext().length(), str.getOldtext()));
-            }
-        }
+            }*/
+    }
+
+    List<TextInterval> sortIntervals(List<TextInterval> intervals) {
+        return intervals.stream().filter(i -> i.getSize() > 0).sorted(Comparator.comparing(TextInterval::getSize)).collect(Collectors.toList());
     }
 
     private void overwrite(byte[] exe, byte[] data, int offset) {
@@ -130,4 +173,9 @@ public class DataCompressor {
         }
     }
 
+    private byte[] strToByte(String str) throws UnsupportedEncodingException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataUtils.string2bytes(str, baos);
+        return baos.toByteArray();
+    }
 }
