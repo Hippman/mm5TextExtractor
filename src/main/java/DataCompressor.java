@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.apache.poi.ss.usermodel.CellType.STRING;
+
 public class DataCompressor {
     private int firstOffset = 0x5c310;
 
@@ -45,7 +47,11 @@ public class DataCompressor {
                     string.setText(row.getCell(4).getStringCellValue().trim());
                     string.setNeedRewrite(Boolean.valueOf(row.getCell(5).getStringCellValue()));
                     string.setOldtext(row.getCell(3).getStringCellValue());
-                    string.setGlobalPosition(Integer.parseInt(row.getCell(0).getStringCellValue()));
+                    if(row.getCell(0).getCellType()==STRING) {
+                        string.setGlobalPosition(Integer.parseInt(row.getCell(0).getStringCellValue()));
+                    } else {
+                        string.setGlobalPosition(Double.valueOf(row.getCell(0).getNumericCellValue()).intValue());
+                    }
                     string.setOffsets(gson.fromJson(row.getCell(2).getStringCellValue(), listType));
                     if (string.isDB()) {
                         stringsDb.add(string);

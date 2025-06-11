@@ -9,6 +9,7 @@ import util.OffsetUtils;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,6 +50,7 @@ public class DatExtractor {
                             oneString.setGlobalPosition(stringPosition);
                             oneString.setLocalPosition(stringPosition - blockStart);
                             oneString.setOffsets(List.of(ofs));
+                            oneString.setNeedRewrite(false);
                             result.add(oneString);
                         }
                     }
@@ -58,7 +60,7 @@ public class DatExtractor {
         }
         List<OneString> resultsFiltered = result.stream().filter(r -> r.getOffsets().size() > 0).collect(Collectors.toList());
         resultsFiltered = result.stream()
-                .sorted((s1, s2) -> s1.getOffsets().get(0).getType().compareTo(s2.getOffsets().get(0).getType()))
+                .sorted(Comparator.comparing(s -> s.getOffsets().get(0).getType()))
                 .collect(Collectors.toList());
         List<String> dbs = resultsFiltered.stream()
                 .filter(s -> s.getOffsets().get(0).getType() == OffsetType.DB).map(OneString::getText).collect(Collectors.toList());
