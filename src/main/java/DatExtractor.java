@@ -18,7 +18,7 @@ public class DatExtractor {
     private final int[] blockStarts = new int[]{0x4f30c, 0x515cc, 0x51e46, 0x54ff8};
     private final int[] blockEnds = new int[]{0x50ea9, 0x51cab, 0x54aab, 0x55106};
 
-    public void extractText(File fil) throws IOException {
+    public void extractText(File fil, String newFilename) throws IOException {
         byte[] exe = FileUtils.readAllBytes(fil);
         List<OneString> result = new ArrayList<>();
 
@@ -85,7 +85,7 @@ public class DatExtractor {
         for (stringPosition = 0; stringPosition < resultsFiltered.size(); ++stringPosition) {
             OneStringMapper.OneStringToRow(sheet, style, resultsFiltered.get(stringPosition));
         }
-        FileOutputStream fos = new FileOutputStream(new File("." + File.separator + fil.getName() + ".xls"));
+        FileOutputStream fos = new FileOutputStream(new File(newFilename));
         wb.write(fos);
         fos.close();
         System.out.println("Extracted " + result.size() + " strings");
