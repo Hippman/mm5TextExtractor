@@ -1,6 +1,7 @@
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dto.Offset;
+import dto.OffsetType;
 import dto.OneString;
 import dto.TextInterval;
 import org.apache.commons.lang3.ArrayUtils;
@@ -27,6 +28,7 @@ public class DataCompressor {
         byte[] exe = FileUtils.readAllBytes(dat);
         List<OneString> stringsDb = new ArrayList<>();
         List<OneString> stringsPrintf = new ArrayList<>();
+        List<OneString> stringMob = new ArrayList<>();
         HSSFWorkbook wb = new HSSFWorkbook(Files.newInputStream(xls.toPath()));
         HSSFSheet sheet = wb.getSheetAt(0);
         Gson gson = new Gson();
@@ -48,15 +50,20 @@ public class DataCompressor {
                     if (string.isDB()) {
                         stringsDb.add(string);
                     } else {
-                        stringsPrintf.add(string);
+                        if (string.getOffsets() != null && string.getOffsets().get(0).getType() == OffsetType.PRINTF) {
+                            stringsPrintf.add(string);
+                        } else {
+                            stringMob.add(string);
+                        }
+
                     }
                 }
             } catch (Exception ex) {
                 System.out.println(String.valueOf(a));
             }
-
         }
         Integer curOffset = firstOffset;
+        processMob(exe, stringMob);
         processDb(exe, stringsDb, curOffset);
         processPrintf(exe, stringsPrintf);
         List<Byte> datList = IntStream.range(0, exe.length).mapToObj(i -> exe[i]).collect(Collectors.toList());
@@ -68,6 +75,19 @@ public class DataCompressor {
 
         System.out.println("Updated " + stringsDb.size() + " DB strings");
         System.out.println("Updated " + stringsPrintf.size() + " Printf strings");
+    }
+
+    private void processMob(byte[] exe, List<OneString> mobStrings) throws UnsupportedEncodingException {
+        for (OneString str : mobStrings) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataUtils.string2bytes(str.getText(), baos);
+            str.setNewBytes(strToByte(str.getText()));
+            if (str.getText().length() <= 16) {
+                overwrite(exe, str.getNewBytes(), str.getGlobalPosition());
+            } else {
+                String.format("русская MOB строка длинее чем 16 символов. Строка -  %s", str.getText());
+            }
+        }
     }
 
     private void processDb(byte[] exe, List<OneString> dbStrings, Integer curOffset) throws UnsupportedEncodingException {
