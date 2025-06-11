@@ -22,6 +22,8 @@ public class DatExtractor {
         byte[] exe = FileUtils.readAllBytes(fil);
         List<OneString> result = new ArrayList<>();
 
+        List<OneString> mobs = findMobs(exe);
+
         int stringPosition;
         for (int a = 0; a < blockStarts.length; ++a) {
             int position = blockStarts[a];
@@ -73,6 +75,7 @@ public class DatExtractor {
                     }
                 }).collect(Collectors.toList());
 
+        resultsFiltered.addAll(mobs);
         HSSFWorkbook wb = new HSSFWorkbook();
         HSSFCellStyle style = wb.createCellStyle();
         style.setWrapText(true);
@@ -86,6 +89,31 @@ public class DatExtractor {
         wb.write(fos);
         fos.close();
         System.out.println("Extracted " + result.size() + " strings");
+    }
+
+    private List<OneString> findMobs(byte[] exe) throws UnsupportedEncodingException {
+        int begin = 0x44e00;
+        int size = begin + 0x6d70;
+        List<OneString> ret = new ArrayList<>();
+        for (int a = begin; a < size; a += 60) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            for (int b = 0; b < 16; b++) {
+                baos.write(exe[a + b]);
+            }
+            List<String> temp = new ArrayList<>();
+            CCTextConverter.bytes2string(temp, baos.toByteArray());
+            if (!temp.isEmpty() && !temp.get(0).isEmpty()) {
+                OneString str = new OneString();
+                str.setText(temp.get(0));
+                str.setOldtext(temp.get(0));
+                str.setGlobalPosition(a);
+                Offset offs = new Offset();
+                offs.setType(OffsetType.MOB);
+                str.setOffsets(List.of(offs));
+                ret.add(str);
+            }
+        }
+        return ret;
     }
 
     private void findBiggerInterval(List<OneString> list) {

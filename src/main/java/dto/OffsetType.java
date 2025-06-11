@@ -2,5 +2,6 @@ package dto;
 
 public enum OffsetType {
     PRINTF,
-    DB
+    DB,
+    MOB
 }
