@@ -47,7 +47,7 @@ public class DataCompressor {
                     string.setText(row.getCell(4).getStringCellValue().trim());
                     string.setNeedRewrite(Boolean.valueOf(row.getCell(5).getStringCellValue()));
                     string.setOldtext(row.getCell(3).getStringCellValue());
-                    if(row.getCell(0).getCellType()==STRING) {
+                    if (row.getCell(0).getCellType() == STRING) {
                         string.setGlobalPosition(Integer.parseInt(row.getCell(0).getStringCellValue()));
                     } else {
                         string.setGlobalPosition(Double.valueOf(row.getCell(0).getNumericCellValue()).intValue());
@@ -127,7 +127,21 @@ public class DataCompressor {
     }
 
     private void processPrintf(byte[] exe, List<OneString> printfStrings) throws Exception {
+        printfStrings.stream().filter(OneString::getNeedRewrite).forEach(str -> {
+            if (str.getText().length() <= str.getOldtext().length()) {
+                try {
+                    str.setNewBytes(strToByte(str.getText()));
+                    System.out.println(String.format("Строка [%s] перезаписана", str.getText()));
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+                overwrite(exe, str.getNewBytes(), str.getGlobalPosition());
+            } else {
+                System.out.printf("!!! Не могу перезаписать строку, она длинее оригинала. Строка оригинал %s", str.getOldtext());
+            }
+        });
         List<TextInterval> intervals = new ArrayList<>();
+        printfStrings = printfStrings.stream().filter(s -> !s.getNeedRewrite()).collect(Collectors.toList());
         //Соберем список свободных интервалов
         for (OneString str : printfStrings) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -151,7 +165,17 @@ public class DataCompressor {
         //отсортируем строки по уменьшению размера нового текста
         printfStrings = printfStrings.stream().sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
         //перераспределим строки
+        int a = 0;
         for (OneString str : printfStrings) {
+            if (!str.checkPercents()) {
+                System.out.printf("В строке неверное количество символов %%. Строка оригинал %s%n", str.getOldtext());
+                a++;
+                continue;
+            }
+            if (str.getProcessed() || str.getNeedRewrite()) {
+                a++;
+                continue;
+            }
             byte[] pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
             TextInterval interval = intervals.stream().filter(i -> i.getSize() >= str.getNewSize()).findFirst().orElse(null);
             if (interval == null) {
@@ -167,20 +191,28 @@ public class DataCompressor {
             interval.shrinkFromStart(str.getNewSize());
             intervals = sortIntervals(intervals);
             pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
+
+            List<OneString> sameStrings = printfStrings.stream().filter(s -> s.getGlobalPosition().equals(str.getGlobalPosition())
+                    && s.getOffsets().get(0).getOffset() != str.getOffsets().get(0).getOffset()).collect(Collectors.toList());
+            if (!sameStrings.isEmpty()) {
+                for (OneString str2 : sameStrings) {
+                    for (Offset offs : str2.getOffsets()) {
+                        overwrite(exe, pointer, offs.getOffset());
+                    }
+                    str2.setProcessed(true);
+                }
+            }
             for (Offset offs : str.getOffsets()) {
                 overwrite(exe, pointer, offs.getOffset());
             }
             overwrite(exe, str.getNewBytes(), str.getGlobalPosition());
+            str.setProcessed(true);
+            a++;
         }
-        int a = 1;
-            /*if (str.getOldtext().length() >= str.getText().length()) {
-                //можно перезаписать старую строку
-                overwrite(exe, str.getOldBytes(), str.getGlobalPosition());
-            } else {
-                System.out.println(
-                        String.format("русская Printf строка длинее чем оригинал. Смещение указателя - %d; Длина - %d; Оригинал -  %s",
-                                str.getOffsets().get(0).getOffset(), str.getOldtext().length(), str.getOldtext()));
-            }*/
+        System.out.println("Оставшиеся интервалы");
+        intervals.forEach(i -> {
+            System.out.println(String.format("Начало %d; Длина %d", i.getStart(), i.getSize()));
+        });
     }
 
     List<TextInterval> sortIntervals(List<TextInterval> intervals) {

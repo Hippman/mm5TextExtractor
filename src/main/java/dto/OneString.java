@@ -15,12 +15,13 @@ public class OneString {
     private Integer localPosition;
     private List<Offset> offsets;
     private Boolean needRewrite;
+    private Boolean processed = false;
 
     private byte[] oldBytes;
     private byte[] newBytes;
 
-    public int getNewSize(){
-        if(newBytes!=null){
+    public int getNewSize() {
+        if (newBytes != null) {
             return newBytes.length;
         }
         return 0;
@@ -36,5 +37,11 @@ public class OneString {
             return false;
         }
         return offsets.get(0).getType() == OffsetType.DB;
+    }
+
+    public Boolean checkPercents() {
+        int countText = text.length() - text.replace("%", "").length();
+        int countOldText = oldtext.length() - oldtext.replace("%", "").length();
+        return countText == countOldText;
     }
 }
