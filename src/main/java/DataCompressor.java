@@ -115,7 +115,7 @@ public class DataCompressor {
                     }
                     System.out.println(String.format("DB [%s] передвинута", str.getText()));
 
-                    curOffset += str.getNewBytes().length;
+                     curOffset += str.getNewBytes().length;
 
                 } else {
                     System.out.println(

@@ -50,6 +50,9 @@ public class CCTextConverter {
                     sb.append(new String(bytes, j, 1, encoding));
             }
         }
-
+        String tmp = sb.toString();
+        if (!tmp.isEmpty()) {
+            lines.add(tmp);
+        }
     }
 }
