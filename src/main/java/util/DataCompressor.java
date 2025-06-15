@@ -1,3 +1,5 @@
+package util;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dto.Offset;
@@ -9,8 +11,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import util.DataUtils;
-import util.FileUtils;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -101,8 +101,7 @@ public class DataCompressor {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataUtils.string2bytes(str.getText(), baos);
             str.setNewBytes(strToByte(str.getText()));
-            if (str.getOldtext().length() >= str.getText().length() &&
-                    str.getOldtext().equals(str.getText())) {
+            if (str.getOldtext().length() >= str.getText().length()) {
                 //можно перезаписать старую строку
                 overwrite(exe, str.getNewBytes(), str.getGlobalPosition());
             } else {
@@ -119,8 +118,8 @@ public class DataCompressor {
 
                 } else {
                     System.out.println(
-                            String.format("русская DB строка длинее чем оригинал. И указано, что ее нельзя переносить. Смещение указателя - %d; Длина - %d; Оригинал -  %s",
-                                    str.getOffsets().get(0).getOffset(), str.getOldtext().length(), str.getOldtext()));
+                            String.format("русская DB строка длинее чем оригинал. И указано, что ее нельзя переносить. Смещение указателя - %d; Длина - %d; Длина оригинала %d; Оригинал -  %s",
+                                    str.getOffsets().get(0).getOffset(),str.getText().length(), str.getOldtext().length(), str.getOldtext()));
                 }
             }
         }
@@ -131,7 +130,7 @@ public class DataCompressor {
             if (str.getText().length() <= str.getOldtext().length()) {
                 try {
                     str.setNewBytes(strToByte(str.getText()));
-                    System.out.println(String.format("Строка [%s] перезаписана", str.getText()));
+                    //System.out.println(String.format("Строка [%s] перезаписана", str.getText()));
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException(e);
                 }
@@ -168,7 +167,7 @@ public class DataCompressor {
         int a = 0;
         for (OneString str : printfStrings) {
             if (!str.checkPercents()) {
-                System.out.printf("В строке неверное количество символов %%. Строка оригинал %s%n", str.getOldtext());
+                System.out.printf("!! В строке неверное количество символов %%. Строка оригинал %s%n", str.getOldtext());
                 a++;
                 continue;
             }
@@ -180,12 +179,12 @@ public class DataCompressor {
             TextInterval interval = intervals.stream().filter(i -> i.getSize() >= str.getNewSize()).findFirst().orElse(null);
             if (interval == null) {
                 System.out.println(
-                        String.format("русская Printf строка не влезает ни в один из интервалов. Смещение указателя - %d; Длина - %d; Оригинал -  %s",
+                        String.format("!! русская Printf строка не влезает ни в один из интервалов. Смещение указателя - %d; Длина - %d; Оригинал -  %s",
                                 str.getOffsets().get(0).getOffset(), str.getOldtext().length(), str.getOldtext()));
-                throw (new Exception("Не хватает места"));
+                throw (new Exception("!! Не хватает места"));
             }
             if (str.getGlobalPosition() != interval.getStart()) {
-                System.out.println(String.format("Строка [%s] передвинута", str.getText()));
+                //System.out.println(String.format("Строка [%s] передвинута", str.getText()));
             }
             str.setGlobalPosition(interval.getStart());
             interval.shrinkFromStart(str.getNewSize());
@@ -209,10 +208,6 @@ public class DataCompressor {
             str.setProcessed(true);
             a++;
         }
-        System.out.println("Оставшиеся интервалы");
-        intervals.forEach(i -> {
-            System.out.println(String.format("Начало %d; Длина %d", i.getStart(), i.getSize()));
-        });
     }
 
     List<TextInterval> sortIntervals(List<TextInterval> intervals) {

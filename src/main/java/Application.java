@@ -1,4 +1,12 @@
+import com.google.gson.Gson;
+import dto.StoredConfig;
+import gui.MainPanel;
+import util.DatExtractor;
+import util.DataCompressor;
+import util.XenFileWorker;
+
 import java.io.*;
+import java.nio.file.Files;
 
 public class Application {
 
@@ -8,12 +16,23 @@ public class Application {
     private static final String compressXenText = "compressxen";
 
     public static void main(String[] args) throws Exception {
+        File panelConfigfile = new File("last_paths.json");
+        StoredConfig config = new StoredConfig();
+        if (panelConfigfile.exists()) {
+            String data = new String(Files.readAllBytes(panelConfigfile.toPath()));
+            Gson gson = new Gson();
+            config = gson.fromJson(data, StoredConfig.class);
+        }
+        MainPanel panel = new MainPanel(config);
+
+/*
+
         if (args.length < 2) {
             System.out.println("Use for extract or compress texts from/to xeen.dat\nextractor.jar");
             System.out.println("extract [XEEN.DAT path] [xeen.dat.xls path]");
             System.out.println("compress [XEEN.DAT path] [xeen.dat.xls path] [out XEEN.DAT path]");
             System.out.println("extractxen [.XEN or .BIN file from CC] [.xls path]");
-            System.out.println("compressxen [.XEN or .BIN file from CC] [.xls path] [out path]");
+            System.out.println("compressxen [.xls path] [out path]");
             System.exit(0);
         }
         File dat = new File(args[1]);
@@ -42,6 +61,6 @@ public class Application {
             XenFileWorker ec = new XenFileWorker();
             File xls = new File(args[1]);
             ec.compressTexts(xls, args[2]);
-        }
+        }*/
     }
 }

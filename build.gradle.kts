@@ -19,6 +19,7 @@ dependencies {
     implementation("org.apache.poi:poi:4.1.2")
     implementation("org.apache.commons:commons-lang3:3.17.0")
     implementation("com.google.code.gson:gson:2.13.1")
+
 }
 
 tasks.jar {
