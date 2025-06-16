@@ -25,11 +25,20 @@ public class DatExtractor {
 
         List<OneString> mobs = findMobs(exe);
 
+        /*ByteArrayOutputStream baoss = new ByteArrayOutputStream();
+        for (int aa = 0x5340e; aa <= 0x5349b; aa++) {
+            baoss.write(exe[aa]);
+        }
+
+        List<String> str = new ArrayList<>();
+        CCTextConverter.bytes2string(str, baoss.toByteArray());*/
+
         int stringPosition;
         for (int a = 0; a < blockStarts.length; ++a) {
             int position = blockStarts[a];
             int endPosition = blockEnds[a];
             stringPosition = position;
+
 
             for (ByteArrayOutputStream baos = new ByteArrayOutputStream(); position < endPosition; ++position) {
                 baos.write(exe[position]);
