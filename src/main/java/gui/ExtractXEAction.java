@@ -6,7 +6,7 @@ import dto.StoredConfig;
 import enums.ConfigLineType;
 import enums.Operations;
 import lombok.SneakyThrows;
-import util.DatExtractor;
+import util.XenFileWorker;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -15,13 +15,13 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class ExtractDatAction implements ActionListener {
+public class ExtractXEAction implements ActionListener {
 
 
     private JFrame fram;
     private StoredConfig config;
 
-    public ExtractDatAction(JFrame fram, StoredConfig config) {
+    public ExtractXEAction(JFrame fram, StoredConfig config) {
         this.fram = fram;
         this.config = config;
     }
@@ -30,18 +30,19 @@ public class ExtractDatAction implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         ConfigLine cfg=null;
-        if(config.getValues().containsKey(Operations.EXTRACT_DAT)){
-            cfg=config.getValues().get(Operations.EXTRACT_DAT);
+        if(config.getValues().containsKey(Operations.EXTRACT_XE)){
+            cfg=config.getValues().get(Operations.EXTRACT_XE);
         }
-        JFileChooser chooser = new JFileChooser(".");
 
-        chooser.setSelectedFile(new File(cfg==null?"Xeen.dat":cfg.getData().get(ConfigLineType.ORIGINAL_PATH)));
-        chooser.setDialogTitle("Выбери файл Xeen.dat");
+        JFileChooser chooser = new JFileChooser(".");
+        chooser.setSelectedFile(new File(cfg==null?"dial.xe":cfg.getData().get(ConfigLineType.ORIGINAL_PATH)));
+        chooser.setDialogTitle("Выбери оригинальный файл XE или DAT");
         int retval = chooser.showOpenDialog(fram);
         if (retval != 0) {
             return;
         }
-        File xeenDat = chooser.getSelectedFile();
+        File xeDat = chooser.getSelectedFile();
+
         chooser.setDialogTitle("Выбери путь к Xls файлу");
         chooser.setSelectedFile(new File(cfg==null?"stored_texts.xls":cfg.getData().get(ConfigLineType.XLS_PATH)));
         retval = chooser.showSaveDialog(fram);
@@ -49,14 +50,16 @@ public class ExtractDatAction implements ActionListener {
             return;
         }
         File xlsFile = chooser.getSelectedFile();
-        System.out.println("Extracting");
-        DatExtractor ec = new DatExtractor();
-        ec.extractText(xeenDat, xlsFile.getAbsolutePath());
+
+
+        System.out.println("Extracting XEN");
+        XenFileWorker ec = new XenFileWorker();
+        ec.extractTexts(xeDat, xlsFile.getAbsolutePath());
 
         cfg = new ConfigLine();
-        cfg.getData().put(ConfigLineType.ORIGINAL_PATH, xeenDat.getAbsolutePath());
+        cfg.getData().put(ConfigLineType.ORIGINAL_PATH, xeDat.getAbsolutePath());
         cfg.getData().put(ConfigLineType.XLS_PATH, xlsFile.getAbsolutePath());
-        config.getValues().put(Operations.EXTRACT_DAT, cfg);
+        config.getValues().put(Operations.EXTRACT_XE, cfg);
 
         Gson gson = new Gson();
         String data = gson.toJson(config);

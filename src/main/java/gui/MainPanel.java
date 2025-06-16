@@ -36,9 +36,13 @@ public class MainPanel extends JPanel implements ActionListener {
 
         compressDatButtonRepeat = new JButton("Повторить");
         compressDatButtonRepeat.addActionListener(new CompressDatRepeatAction(frame, config));
+
         extractXeButton = new JButton("Преобразовать в текст XE файл");
+        extractXeButton.addActionListener(new ExtractXEAction(frame, config));
         extractXeButtonRepeat = new JButton("Повторить");
+
         compressXeButton = new JButton("Собрать обратно XE файл");
+        compressXeButton.addActionListener(new CompressXEAction(frame, config));
         compressXeButtonRepeat = new JButton("Повторить");
 
 
@@ -49,9 +53,9 @@ public class MainPanel extends JPanel implements ActionListener {
         panel.add(compressDatButton);
         panel.add(compressDatButtonRepeat);
         panel.add(extractXeButton);
-        panel.add(extractXeButtonRepeat);
+        //panel.add(extractXeButtonRepeat);
         panel.add(compressXeButton);
-        panel.add(compressXeButtonRepeat);
+        //panel.add(compressXeButtonRepeat);
         add(panel);
 
         frame = new JFrame("Might and Magic 5 file woorker");
