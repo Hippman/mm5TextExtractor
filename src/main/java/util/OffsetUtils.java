@@ -12,6 +12,7 @@ public class OffsetUtils {
         List<Offset> offsets = new ArrayList<>();
         offsets.addAll(getDBOffsets(exe, localAddress));
         offsets.addAll(getPrintfOffsets(exe, localAddress));
+        offsets.addAll(getPrintfB8Offsets(exe, localAddress));
         return offsets;
     }
 
@@ -23,6 +24,14 @@ public class OffsetUtils {
         search[1] = bytes[3];
         search[2] = bytes[2];
         return findOffsets(exe, search, OffsetType.PRINTF);
+    }
+    private static List<Offset> getPrintfB8Offsets(byte[] exe, Integer localAddress) {
+        byte[] bytes = ByteBuffer.allocate(4).putInt(localAddress).array();
+        byte[] search = ByteBuffer.allocate(3).array();
+        search[0] = (byte) 0xb8;
+        search[1] = bytes[3];
+        search[2] = bytes[2];
+        return findOffsets(exe, search, OffsetType.PRINTFB8);
     }
 
     //настройка поиска указателей типа DB

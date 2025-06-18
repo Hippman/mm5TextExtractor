@@ -70,6 +70,15 @@ public class DataUtils {
         ret[2] = bytes[2];
         return ret;
     }
+    public static byte[] calcPrintfB8Pointer(int offset) {
+        int locOffset = offset - blockStart;
+        byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
+        byte[] ret = new byte[3];
+        ret[0] = (byte)0xB8;
+        ret[1] = bytes[3];
+        ret[2] = bytes[2];
+        return ret;
+    }
 
     public static byte[] calcDbPointer(int offset) {
         byte[] ret = new byte[4];

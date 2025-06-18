@@ -33,8 +33,10 @@ public class XenFileWorker {
         cell.setCellStyle(style);
 
         for (int a = 0; a < file.length; a++) {
+
             baos.write(file[a]);
-            if (file[a] < 0x20) {
+            if ((file[a] & 0xffL) < 0x20) {
+
                 String temp = renderString(baos.toByteArray());
                 if (!temp.isEmpty()) {
                     addRow(sheet, style, temp);
@@ -53,7 +55,11 @@ public class XenFileWorker {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         for (int a = 1; a <= sheet.getLastRowNum(); a++) {
             HSSFRow row = sheet.getRow(a);
+            String oldDat = row.getCell(0).getStringCellValue();
             String dat = row.getCell(1).getStringCellValue();
+            if (oldDat.contains("0x00") && !dat.contains("0x00")) {
+                dat = dat + " 0x00";
+            }
             List<Integer> arr = strToByteArray(dat);
             for (int b = 0; b < arr.size(); b++) {
                 baos.write((byte) (arr.get(b) & 0xff));
@@ -74,10 +80,12 @@ public class XenFileWorker {
 
     private String renderString(byte[] data) {
         String newStr = new String();
+
         for (int a = 0; a < data.length; a++) {
             int value = (int) (data[a] & 0xffL);
-            if (value >= 32 ) {
-                newStr = newStr + Character.toString(value);
+            if (value >= 32) {
+                byte[] tmp = new byte[]{data[a]};
+                newStr = newStr + new String(tmp, Charset.forName("CP866"));
             } else {
                 newStr = String.format("%s0x%02X", newStr, value);
             }

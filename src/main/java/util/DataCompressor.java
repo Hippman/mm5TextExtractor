@@ -56,12 +56,13 @@ public class DataCompressor {
                     if (string.isDB()) {
                         stringsDb.add(string);
                     } else {
-                        if (string.getOffsets() != null && string.getOffsets().get(0).getType() == OffsetType.PRINTF) {
+                        if (string.getOffsets() != null
+                                && (string.getOffsets().get(0).getType() == OffsetType.PRINTF
+                                || string.getOffsets().get(0).getType() == OffsetType.PRINTFB8)) {
                             stringsPrintf.add(string);
                         } else {
                             stringMob.add(string);
                         }
-
                     }
                 }
             } catch (Exception ex) {
@@ -114,12 +115,12 @@ public class DataCompressor {
                     }
                     System.out.println(String.format("DB [%s] передвинута", str.getText()));
 
-                     curOffset += str.getNewBytes().length;
+                    curOffset += str.getNewBytes().length;
 
                 } else {
                     System.out.println(
                             String.format("русская DB строка длинее чем оригинал. И указано, что ее нельзя переносить. Смещение указателя - %d; Длина - %d; Длина оригинала %d; Оригинал -  %s",
-                                    str.getOffsets().get(0).getOffset(),str.getText().length(), str.getOldtext().length(), str.getOldtext()));
+                                    str.getOffsets().get(0).getOffset(), str.getText().length(), str.getOldtext().length(), str.getOldtext()));
                 }
             }
         }
@@ -189,7 +190,11 @@ public class DataCompressor {
             str.setGlobalPosition(interval.getStart());
             interval.shrinkFromStart(str.getNewSize());
             intervals = sortIntervals(intervals);
-            pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
+            if (str.getOffsets().get(0).getType() == OffsetType.PRINTF) {
+                pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
+            } else {
+                pointer = DataUtils.calcPrintfB8Pointer(str.getGlobalPosition());
+            }
 
             List<OneString> sameStrings = printfStrings.stream().filter(s -> s.getGlobalPosition().equals(str.getGlobalPosition())
                     && s.getOffsets().get(0).getOffset() != str.getOffsets().get(0).getOffset()).collect(Collectors.toList());
