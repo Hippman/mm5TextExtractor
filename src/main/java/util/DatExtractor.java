@@ -2,7 +2,7 @@ package util;
 
 import dto.Interval;
 import dto.Offset;
-import dto.OffsetType;
+import enums.OffsetType;
 import dto.OneString;
 import mapper.OneStringMapper;
 import org.apache.poi.hssf.usermodel.*;

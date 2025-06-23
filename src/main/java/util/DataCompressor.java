@@ -3,7 +3,7 @@ package util;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dto.Offset;
-import dto.OffsetType;
+import enums.OffsetType;
 import dto.OneString;
 import dto.TextInterval;
 import org.apache.commons.lang3.ArrayUtils;
@@ -41,6 +41,9 @@ public class DataCompressor {
         for (int a = 1; a <= sheet.getLastRowNum(); a++) {
             HSSFRow row = sheet.getRow(a);
             OneString string = new OneString();
+            if (row == null) {
+                continue;
+            }
             try {
                 if (!row.getCell(4).getStringCellValue().equals(row.getCell(3).getStringCellValue()) ||
                         Boolean.valueOf(row.getCell(5).getStringCellValue())) {
@@ -58,7 +61,9 @@ public class DataCompressor {
                     } else {
                         if (string.getOffsets() != null
                                 && (string.getOffsets().get(0).getType() == OffsetType.PRINTF
-                                || string.getOffsets().get(0).getType() == OffsetType.PRINTFB8)) {
+                                || string.getOffsets().get(0).getType() == OffsetType.PRINTFB8
+                                || string.getOffsets().get(0).getType() == OffsetType.DBPRINTF
+                        )) {
                             stringsPrintf.add(string);
                         } else {
                             stringMob.add(string);
@@ -163,17 +168,27 @@ public class DataCompressor {
         intervals = sortIntervals(intervals);
 
         //отсортируем строки по уменьшению размера нового текста
-        printfStrings = printfStrings.stream().sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
-        //перераспределим строки
-        int a = 0;
+        /*
+        тут мы отделяем DBPRINTF от остальных и выдаем им отдеольный инервал, который ближе всего к их началу и точно вместит изменения
+        это сейчас самый большой
+         */
+        List<OneString> strsDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() == OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
+        List<OneString> strsNDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() != OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
+        TextInterval outinterval = intervals.get(intervals.size() - 1);
+        printfStrings = new ArrayList<>();
+        printfStrings.addAll(strsNDB);
+        printfStrings.addAll(strsDB);
+        subprocessPrintfs(strsDB, exe, List.of(outinterval));
+        subprocessPrintfs(strsNDB, exe, intervals);
+    }
+
+    private void subprocessPrintfs(List<OneString> printfStrings, byte[] exe, List<TextInterval> intervals) throws Exception {
         for (OneString str : printfStrings) {
             if (!str.checkPercents()) {
                 System.out.printf("!! В строке неверное количество символов %%. Строка оригинал %s%n", str.getOldtext());
-                a++;
                 continue;
             }
             if (str.getProcessed() || str.getNeedRewrite()) {
-                a++;
                 continue;
             }
             byte[] pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
@@ -190,11 +205,21 @@ public class DataCompressor {
             str.setGlobalPosition(interval.getStart());
             interval.shrinkFromStart(str.getNewSize());
             intervals = sortIntervals(intervals);
-            if (str.getOffsets().get(0).getType() == OffsetType.PRINTF) {
-                pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
-            } else {
-                pointer = DataUtils.calcPrintfB8Pointer(str.getGlobalPosition());
+            switch (str.getOffsets().get(0).getType()) {
+                case PRINTF: {
+                    pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
+                    break;
+                }
+                case PRINTFB8: {
+                    pointer = DataUtils.calcPrintfB8Pointer(str.getGlobalPosition());
+                    break;
+                }
+                case DBPRINTF: {
+                    pointer = DataUtils.calcDbPrintfPointer(str.getGlobalPosition());
+                    break;
+                }
             }
+
 
             List<OneString> sameStrings = printfStrings.stream().filter(s -> s.getGlobalPosition().equals(str.getGlobalPosition())
                     && s.getOffsets().get(0).getOffset() != str.getOffsets().get(0).getOffset()).collect(Collectors.toList());
@@ -211,8 +236,8 @@ public class DataCompressor {
             }
             overwrite(exe, str.getNewBytes(), str.getGlobalPosition());
             str.setProcessed(true);
-            a++;
         }
+
     }
 
     List<TextInterval> sortIntervals(List<TextInterval> intervals) {

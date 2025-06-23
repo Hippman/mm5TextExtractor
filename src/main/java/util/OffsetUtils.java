@@ -1,7 +1,7 @@
 package util;
 
 import dto.Offset;
-import dto.OffsetType;
+import enums.OffsetType;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

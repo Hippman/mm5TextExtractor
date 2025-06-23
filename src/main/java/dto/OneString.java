@@ -1,5 +1,6 @@
 package dto;
 
+import enums.OffsetType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

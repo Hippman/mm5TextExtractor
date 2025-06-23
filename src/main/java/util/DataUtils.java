@@ -93,6 +93,16 @@ public class DataUtils {
         ret[3] = bytes[2];
         return ret;
     }
+    public static byte[] calcDbPrintfPointer(int offset) {
+        byte[] ret = new byte[4];
+        int locOffset = offset - blockStart;
+        byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
+        ret[0] = bytes[3];
+        ret[1] = bytes[2];
+        ret[2] = (byte)0xe2;
+        ret[3] = (byte)0x46;
+        return ret;
+    }
     /*
     public static int getWord(byte[] b, int index) {
         return getByte(b, index) + (getByte(b, index + 1) << 8);
