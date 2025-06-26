@@ -65,7 +65,9 @@ public class DataCompressor {
                                 || string.getOffsets().get(0).getType() == OffsetType.DBPRINTF
                         )) {
                             stringsPrintf.add(string);
-                        } else {
+                        }
+                        if (string.getOffsets() != null
+                                && (string.getOffsets().get(0).getType() == OffsetType.MOB)) {
                             stringMob.add(string);
                         }
                     }
@@ -174,12 +176,14 @@ public class DataCompressor {
          */
         List<OneString> strsDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() == OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
         List<OneString> strsNDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() != OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
-        TextInterval outinterval = intervals.get(intervals.size() - 1);
-        printfStrings = new ArrayList<>();
-        printfStrings.addAll(strsNDB);
-        printfStrings.addAll(strsDB);
-        subprocessPrintfs(strsDB, exe, List.of(outinterval));
-        subprocessPrintfs(strsNDB, exe, intervals);
+        if (!intervals.isEmpty()) {
+            TextInterval outinterval = intervals.get(intervals.size() - 1);
+            printfStrings = new ArrayList<>();
+            printfStrings.addAll(strsNDB);
+            printfStrings.addAll(strsDB);
+            subprocessPrintfs(strsDB, exe, List.of(outinterval));
+            subprocessPrintfs(strsNDB, exe, intervals);
+        }
     }
 
     private void subprocessPrintfs(List<OneString> printfStrings, byte[] exe, List<TextInterval> intervals) throws Exception {
