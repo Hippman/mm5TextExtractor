@@ -51,6 +51,9 @@ public class PatchWorker {
         HSSFSheet sheet = wb.getSheetAt(0);
         for (int a = 1; a <= sheet.getLastRowNum(); a++) {
             HSSFRow row = sheet.getRow(a);
+            if (!row.getCell(3).getStringCellValue().equals("true")) {
+                continue;
+            }
             List<Integer> origData = strToByteArray(row.getCell(1).getStringCellValue().replaceAll(" ", ""));
             List<Integer> newData = strToByteArray(row.getCell(2).getStringCellValue().replaceAll(" ", ""));
             int dataIterator = 0;
