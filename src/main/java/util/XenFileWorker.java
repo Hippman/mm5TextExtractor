@@ -78,7 +78,7 @@ public class XenFileWorker {
         cell2.setCellStyle(style);
     }
 
-    private String renderString(byte[] data) {
+    public static String renderString(byte[] data) {
         String newStr = new String();
 
         for (int a = 0; a < data.length; a++) {

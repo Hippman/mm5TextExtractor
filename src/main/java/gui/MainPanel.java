@@ -1,12 +1,15 @@
 package gui;
 
 import dto.StoredConfig;
+import util.PatchWorker;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
 
 public class MainPanel extends JPanel implements ActionListener {
     private StoredConfig config;
@@ -67,6 +70,18 @@ public class MainPanel extends JPanel implements ActionListener {
         frame.getContentPane().add("Center", panel);
         frame.pack();
         frame.setVisible(true);
+
+        File fil1=new File("C:\\projects\\mm5TextExtractor\\XEEN2.DAT");
+        File fil2=new File("C:\\projects\\mm5TextExtractor\\xeen_modified.dat");
+        File fil4=new File("C:\\projects\\mm5TextExtractor\\xeen_modified_new.dat");
+        File fil3=new File("C:\\projects\\mm5TextExtractor\\patch.xls");
+        PatchWorker pw=new PatchWorker();
+        try {
+            //pw.makePatch(fil1,fil2,106608, 269664);
+            pw.applyPatch(fil1,fil4,fil3);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
