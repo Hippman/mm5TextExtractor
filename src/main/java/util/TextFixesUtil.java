@@ -4,10 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import dto.ForumTranslateBlock;
 import dto.ForumTranslateRow;
-import org.apache.poi.hssf.usermodel.HSSFRichTextString;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.usermodel.*;
 
 
 import java.io.*;
@@ -29,12 +26,17 @@ public class TextFixesUtil {
         File[] files = folder.listFiles();
         Arrays.stream(files).forEach(f -> {
             try {
-                HSSFWorkbook wb = xenFileWorker.extractTexts(f);
+                HSSFWorkbook wb = extractTexts(f);
                 File ruFile = new File(ruFoldPath + "\\" + f.getName());
                 HSSFWorkbook ruWb = null;
-                if (ruFile.exists()) {
-                    ruWb = xenFileWorker.extractTexts(ruFile);
+                if (f.getName().equals("quest.bin")) {
+                    int a = 0;
                 }
+                if (ruFile.exists()) {
+                    ruWb = extractTexts(ruFile);
+                    //ruWb = xenFileWorker.extractTexts(ruFile);
+                }
+
                 processFile(wb, translate, ruWb, f.getName());
                 xenFileWorker.compressTexts(wb, outFoldPath + "\\" + f.getName());
             } catch (IOException e) {
@@ -47,7 +49,7 @@ public class TextFixesUtil {
         HSSFSheet sheet = wb.getSheetAt(0);
         String firstData = sheet.getRow(1).getCell(0).getStringCellValue();
         ForumTranslateBlock block = translate.stream()
-                .filter(b -> b.getRows().stream().anyMatch(r -> firstData.contains(r.getOriginal())))
+                .filter(b -> !b.getRows().isEmpty() && firstData.contains(b.getRows().get(0).getOriginal()))
                 .filter(b -> b.getRows().size() <= sheet.getLastRowNum() + 10)
                 .findFirst().orElse(null);
         if (block != null) {
@@ -56,7 +58,15 @@ public class TextFixesUtil {
             for (int a = 1; a <= sheet.getLastRowNum(); a++) {
                 HSSFRow row = sheet.getRow(a);
                 ForumTranslateRow tRow = block.getRows().stream()
-                        .filter(r -> row.getCell(0).getStringCellValue().contains(r.getOriginal())).findFirst().orElse(null);
+                        .filter(r -> row.getCell(0).getStringCellValue().contains(r.getOriginal()))
+                        .filter(r -> {
+                            double len = r.getOriginal().replaceAll("0x00", "").length();
+                            double rowLen = row.getCell(0).getStringCellValue().length();
+                            double dif = Math.abs(len - rowLen);
+                            double avg = (len + rowLen) / 2.0;
+                            return (dif / avg * 100) < 40.0;
+                        })
+                        .findFirst().orElse(null);
                 if (tRow != null) {
                     String translated = row.getCell(0).getStringCellValue().replaceAll(Pattern.quote(tRow.getOriginal()), tRow.getTranslated());
                     row.getCell(1).setCellValue(new HSSFRichTextString(translated));
@@ -119,5 +129,38 @@ public class TextFixesUtil {
             }
         }
         return ret;
+    }
+
+    public static HSSFWorkbook extractTexts(File fil) throws IOException {
+        byte[] file = FileUtils.readAllBytes(fil);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        HSSFWorkbook wb = new HSSFWorkbook();
+        HSSFCellStyle style = wb.createCellStyle();
+        style.setWrapText(true);
+        HSSFSheet sheet = wb.createSheet(fil.getName());
+        HSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1);
+        HSSFCell cell = row.createCell(0);
+        sheet.setColumnWidth(0, 15360);
+        sheet.setColumnWidth(1, 15360);
+        cell.setCellValue(new HSSFRichTextString("Original"));
+        cell.setCellStyle(style);
+
+        cell = row.createCell(1);
+        cell.setCellValue(new HSSFRichTextString("translated"));
+        cell.setCellStyle(style);
+
+        for (int a = 0; a < file.length; a++) {
+
+            baos.write(file[a]);
+            if ((file[a] & 0xffL) == 0x00) {
+                String temp = XenFileWorker.renderString(baos.toByteArray());
+                if (!temp.isEmpty()) {
+                    XenFileWorker.addRow(sheet, style, temp);
+                }
+                baos = new ByteArrayOutputStream();
+            }
+        }
+        return wb;
     }
 }
