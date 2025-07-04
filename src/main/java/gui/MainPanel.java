@@ -19,7 +19,8 @@ public class MainPanel extends JPanel implements ActionListener {
     private final JButton extractXeButton;
     private final JButton extractXeButtonRepeat;
     private final JButton compressXeButton;
-    private final JButton compressXeButtonRepeat;
+    private final JButton translateFiles;
+
 
     public MainPanel(StoredConfig config) {
         this.config = config;
@@ -43,7 +44,8 @@ public class MainPanel extends JPanel implements ActionListener {
 
         compressXeButton = new JButton("Собрать обратно XE файл");
         compressXeButton.addActionListener(new CompressXEAction(frame, config));
-        compressXeButtonRepeat = new JButton("Повторить");
+        translateFiles = new JButton("Заполнить переводами малые файлы");
+        translateFiles.addActionListener(new TranslateSmallAction(frame, config));
 
 
         JPanel panel = new JPanel();
@@ -55,7 +57,7 @@ public class MainPanel extends JPanel implements ActionListener {
         panel.add(extractXeButton);
         //panel.add(extractXeButtonRepeat);
         panel.add(compressXeButton);
-        //panel.add(compressXeButtonRepeat);
+        panel.add(translateFiles);
         add(panel);
 
         frame = new JFrame("Might and Magic 5 file woorker");
@@ -67,7 +69,6 @@ public class MainPanel extends JPanel implements ActionListener {
         frame.getContentPane().add("Center", panel);
         frame.pack();
         frame.setVisible(true);
-
     }
 
     @Override

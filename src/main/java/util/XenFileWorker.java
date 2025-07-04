@@ -14,6 +14,14 @@ import java.util.List;
 
 public class XenFileWorker {
     public void extractTexts(File fil, String newFilename) throws IOException {
+
+        HSSFWorkbook wb = extractTexts(fil);
+        FileOutputStream fos = new FileOutputStream(newFilename);
+        wb.write(fos);
+        wb.close();
+    }
+
+    public HSSFWorkbook extractTexts(File fil) throws IOException {
         byte[] file = FileUtils.readAllBytes(fil);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -44,13 +52,15 @@ public class XenFileWorker {
                 baos = new ByteArrayOutputStream();
             }
         }
-        FileOutputStream fos = new FileOutputStream(newFilename);
-        wb.write(fos);
-        wb.close();
+        return wb;
+    }
+    public void compressTexts(File xls, String outFilename) throws IOException{
+        HSSFWorkbook wb = new HSSFWorkbook(Files.newInputStream(xls.toPath()));
+        compressTexts(wb,outFilename);
     }
 
-    public void compressTexts(File xls, String outFilename) throws IOException {
-        HSSFWorkbook wb = new HSSFWorkbook(Files.newInputStream(xls.toPath()));
+
+    public void compressTexts(HSSFWorkbook wb, String outFilename) throws IOException {
         HSSFSheet sheet = wb.getSheetAt(0);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         for (int a = 1; a <= sheet.getLastRowNum(); a++) {
@@ -93,7 +103,7 @@ public class XenFileWorker {
         return newStr;
     }
 
-    private static List<Integer> strToByteArray(String data) {
+    public static List<Integer> strToByteArray(String data) {
         List<Integer> ret = new ArrayList<>();
         char[] symbols = data.toCharArray();
         byte[] symbols2 = data.getBytes(Charset.forName("CP866"));
