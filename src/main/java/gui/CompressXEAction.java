@@ -16,6 +16,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static javax.swing.JOptionPane.showMessageDialog;
+
 public class CompressXEAction implements ActionListener {
 
 
@@ -30,15 +32,15 @@ public class CompressXEAction implements ActionListener {
     @SneakyThrows
     @Override
     public void actionPerformed(ActionEvent e) {
-        ConfigLine cfg=null;
-        if(config.getValues().containsKey(Operations.COMPRESS_XE)){
-            cfg=config.getValues().get(Operations.COMPRESS_XE);
+        ConfigLine cfg = null;
+        if (config.getValues().containsKey(Operations.COMPRESS_XE)) {
+            cfg = config.getValues().get(Operations.COMPRESS_XE);
         }
 
         JFileChooser chooser = new JFileChooser(".");
 
         chooser.setDialogTitle("Выбери путь к Xls файлу");
-        chooser.setSelectedFile(new File(cfg==null?"stored_texts.xls":cfg.getData().get(ConfigLineType.XLS_PATH)));
+        chooser.setSelectedFile(new File(cfg == null ? "stored_texts.xls" : cfg.getData().get(ConfigLineType.XLS_PATH)));
         int retval = chooser.showOpenDialog(fram);
         if (retval != 0) {
             return;
@@ -46,7 +48,7 @@ public class CompressXEAction implements ActionListener {
         File xlsFile = chooser.getSelectedFile();
 
         chooser.setDialogTitle("Выбери путь к новому XE/DAT файлу");
-        chooser.setSelectedFile(new File(cfg==null?"new.dizl.xe":cfg.getData().get(ConfigLineType.NEW_PATH)));
+        chooser.setSelectedFile(new File(cfg == null ? "new.dizl.xe" : cfg.getData().get(ConfigLineType.NEW_PATH)));
         retval = chooser.showSaveDialog(fram);
         if (retval != 0) {
             return;
@@ -56,7 +58,12 @@ public class CompressXEAction implements ActionListener {
 
         System.out.println("Compressing XEN");
         XenFileWorker ec = new XenFileWorker();
-        ec.compressTexts(xlsFile,newXeenDat.getAbsolutePath());
+        try {
+            ec.compressTexts(xlsFile, newXeenDat.getAbsolutePath());
+            showMessageDialog(null, "Всё корректно записалось");
+        } catch (Exception ex) {
+            showMessageDialog(null, ex.getMessage());
+        }
 
         cfg = new ConfigLine();
         cfg.getData().put(ConfigLineType.XLS_PATH, xlsFile.getAbsolutePath());

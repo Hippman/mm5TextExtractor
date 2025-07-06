@@ -13,6 +13,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
+import static javax.swing.JOptionPane.showMessageDialog;
+
 public class CompressDatRepeatAction implements ActionListener {
 
 
@@ -32,8 +34,14 @@ public class CompressDatRepeatAction implements ActionListener {
         }
         ConfigLine line = config.getValues().get(Operations.COMPRESS_DAT);
         DataCompressor dc = new DataCompressor();
-        dc.compressTexts(new File(line.getData().get(ConfigLineType.ORIGINAL_PATH)),
-                new File(line.getData().get(ConfigLineType.XLS_PATH)),
-                line.getData().get(ConfigLineType.NEW_PATH));
+        try {
+            dc.compressTexts(new File(line.getData().get(ConfigLineType.ORIGINAL_PATH)),
+                    new File(line.getData().get(ConfigLineType.XLS_PATH)),
+                    line.getData().get(ConfigLineType.NEW_PATH));
+            showMessageDialog(null, "Всё корректно записалось");
+        }catch (Exception ex){
+            showMessageDialog(null, ex.getMessage());
+        }
+
     }
 }
