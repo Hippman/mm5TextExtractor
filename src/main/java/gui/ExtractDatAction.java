@@ -15,6 +15,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static javax.swing.JOptionPane.showMessageDialog;
+
 public class ExtractDatAction implements ActionListener {
 
 
@@ -29,13 +31,13 @@ public class ExtractDatAction implements ActionListener {
     @SneakyThrows
     @Override
     public void actionPerformed(ActionEvent e) {
-        ConfigLine cfg=null;
-        if(config.getValues().containsKey(Operations.EXTRACT_DAT)){
-            cfg=config.getValues().get(Operations.EXTRACT_DAT);
+        ConfigLine cfg = null;
+        if (config.getValues().containsKey(Operations.EXTRACT_DAT)) {
+            cfg = config.getValues().get(Operations.EXTRACT_DAT);
         }
         JFileChooser chooser = new JFileChooser(".");
 
-        chooser.setSelectedFile(new File(cfg==null?"Xeen.dat":cfg.getData().get(ConfigLineType.ORIGINAL_PATH)));
+        chooser.setSelectedFile(new File(cfg == null ? "Xeen.dat" : cfg.getData().get(ConfigLineType.ORIGINAL_PATH)));
         chooser.setDialogTitle("Выбери файл Xeen.dat");
         int retval = chooser.showOpenDialog(fram);
         if (retval != 0) {
@@ -43,7 +45,7 @@ public class ExtractDatAction implements ActionListener {
         }
         File xeenDat = chooser.getSelectedFile();
         chooser.setDialogTitle("Выбери путь к Xls файлу");
-        chooser.setSelectedFile(new File(cfg==null?"stored_texts.xls":cfg.getData().get(ConfigLineType.XLS_PATH)));
+        chooser.setSelectedFile(new File(cfg == null ? "stored_texts.xls" : cfg.getData().get(ConfigLineType.XLS_PATH)));
         retval = chooser.showSaveDialog(fram);
         if (retval != 0) {
             return;
@@ -51,7 +53,12 @@ public class ExtractDatAction implements ActionListener {
         File xlsFile = chooser.getSelectedFile();
         System.out.println("Extracting");
         DatExtractor ec = new DatExtractor();
-        ec.extractText(xeenDat, xlsFile.getAbsolutePath());
+        try {
+            ec.extractText(xeenDat, xlsFile.getAbsolutePath());
+            showMessageDialog(null, "Всё корректно считалось");
+        } catch (Exception ex) {
+            showMessageDialog(null, ex.getMessage());
+        }
 
         cfg = new ConfigLine();
         cfg.getData().put(ConfigLineType.ORIGINAL_PATH, xeenDat.getAbsolutePath());

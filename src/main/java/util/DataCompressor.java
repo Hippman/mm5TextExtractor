@@ -45,6 +45,7 @@ public class DataCompressor {
                 continue;
             }
             try {
+
                 if (!row.getCell(4).getStringCellValue().equals(row.getCell(3).getStringCellValue()) ||
                         Boolean.valueOf(row.getCell(5).getStringCellValue())) {
                     string.setText(row.getCell(4).getStringCellValue().trim());
@@ -147,47 +148,74 @@ public class DataCompressor {
                 System.out.printf("!!! Не могу перезаписать строку, она длинее оригинала. Строка оригинал %s", str.getOldtext());
             }
         });
-        List<TextInterval> intervals = new ArrayList<>();
+        List<TextInterval> intervalsDb = new ArrayList<>();
+        List<TextInterval> intervalsNdb = new ArrayList<>();
         printfStrings = printfStrings.stream().filter(s -> !s.getNeedRewrite()).collect(Collectors.toList());
+        List<OneString> strsDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() == OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
+        List<OneString> strsNDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() != OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
         //Соберем список свободных интервалов
-        for (OneString str : printfStrings) {
+
+        for (OneString str : strsNDB) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataUtils.string2bytes(str.getText(), baos);
             str.setOldBytes(strToByte(str.getOldtext()));
             str.setNewBytes(strToByte(str.getText()));
 
             TextInterval interval = new TextInterval(str.getGlobalPosition(), str.getOldBytes().length);
-            if (intervals.isEmpty()) {
-                intervals.add(interval);
+            if (intervalsNdb.isEmpty()) {
+                intervalsNdb.add(interval);
             } else {
-                Boolean status = intervals.stream().map(i -> i.unityIntervals(interval)).filter(s -> s).findAny().orElse(false);
+                Boolean status = intervalsNdb.stream().map(i -> i.unityIntervals(interval)).filter(s -> s).findAny().orElse(false);
                 if (!status) {
-                    intervals.add(interval);
+                    intervalsNdb.add(interval);
+                }
+            }
+        }
+        for (OneString str : strsDB) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataUtils.string2bytes(str.getText(), baos);
+            str.setOldBytes(strToByte(str.getOldtext()));
+            str.setNewBytes(strToByte(str.getText()));
+
+            TextInterval interval = new TextInterval(str.getGlobalPosition(), str.getOldBytes().length);
+            if (intervalsDb.isEmpty()) {
+                intervalsDb.add(interval);
+            } else {
+                Boolean status = intervalsDb.stream().map(i -> i.unityIntervals(interval)).filter(s -> s).findAny().orElse(false);
+                if (!status) {
+                    intervalsDb.add(interval);
                 }
             }
         }
         //Отсортируем интервалы по убыванию объема
-        intervals = sortIntervals(intervals);
+        intervalsDb = sortIntervals(intervalsDb);
+
 
         //отсортируем строки по уменьшению размера нового текста
         /*
         тут мы отделяем DBPRINTF от остальных и выдаем им отдеольный инервал, который ближе всего к их началу и точно вместит изменения
         это сейчас самый большой
          */
-        List<OneString> strsDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() == OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
-        List<OneString> strsNDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() != OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
-        if (!intervals.isEmpty()) {
-            TextInterval outinterval = intervals.get(intervals.size() - 1);
+
+        if (!intervalsNdb.isEmpty()) {
+            TextInterval outinterval = intervalsNdb.get(intervalsNdb.size() - 1);
             printfStrings = new ArrayList<>();
             printfStrings.addAll(strsNDB);
             printfStrings.addAll(strsDB);
-            subprocessPrintfs(strsDB, exe, List.of(outinterval));
-            subprocessPrintfs(strsNDB, exe, intervals);
+            intervalsDb.add(outinterval);
+            subprocessPrintfs(strsDB, exe, intervalsDb);
+            intervalsNdb = sortIntervals(intervalsNdb);
+            subprocessPrintfs(strsNDB, exe, intervalsNdb);
         }
     }
 
     private void subprocessPrintfs(List<OneString> printfStrings, byte[] exe, List<TextInterval> intervals) throws Exception {
-        for (OneString str : printfStrings) {
+        printfStrings = sortStrings(printfStrings);
+        for (int a = 0; a < printfStrings.size(); a++) {
+            if (a==50) {
+                int zz = 1;
+            }
+            OneString str = printfStrings.get(a);
             if (!str.checkPercents()) {
                 System.out.printf("!! В строке неверное количество символов %%. Строка оригинал %s%n", str.getOldtext());
                 continue;
@@ -203,9 +231,7 @@ public class DataCompressor {
                                 str.getOffsets().get(0).getOffset(), str.getOldtext().length(), str.getOldtext()));
                 throw (new Exception("!! Не хватает места"));
             }
-            if (str.getGlobalPosition() != interval.getStart()) {
-                //System.out.println(String.format("Строка [%s] передвинута", str.getText()));
-            }
+
             str.setGlobalPosition(interval.getStart());
             interval.shrinkFromStart(str.getNewSize());
             intervals = sortIntervals(intervals);
@@ -225,7 +251,7 @@ public class DataCompressor {
             }
 
 
-            List<OneString> sameStrings = printfStrings.stream().filter(s -> s.getGlobalPosition().equals(str.getGlobalPosition())
+            /*List<OneString> sameStrings = printfStrings.stream().filter(s -> s.getGlobalPosition().equals(str.getGlobalPosition())
                     && s.getOffsets().get(0).getOffset() != str.getOffsets().get(0).getOffset()).collect(Collectors.toList());
             if (!sameStrings.isEmpty()) {
                 for (OneString str2 : sameStrings) {
@@ -234,7 +260,7 @@ public class DataCompressor {
                     }
                     str2.setProcessed(true);
                 }
-            }
+            }*/
             for (Offset offs : str.getOffsets()) {
                 overwrite(exe, pointer, offs.getOffset());
             }
@@ -246,6 +272,10 @@ public class DataCompressor {
 
     List<TextInterval> sortIntervals(List<TextInterval> intervals) {
         return intervals.stream().filter(i -> i.getSize() > 0).sorted(Comparator.comparing(TextInterval::getSize)).collect(Collectors.toList());
+    }
+
+    List<OneString> sortStrings(List<OneString> strings) {
+        return strings.stream().filter(i -> i.getNewSize() > 0).sorted((f1, f2) -> Long.compare(f2.getNewSize(), f1.getNewSize())).collect(Collectors.toList());
     }
 
     private void overwrite(byte[] exe, byte[] data, int offset) {

@@ -15,6 +15,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static javax.swing.JOptionPane.showMessageDialog;
+
 public class ExtractDatRepeatAction implements ActionListener {
 
 
@@ -34,6 +36,11 @@ public class ExtractDatRepeatAction implements ActionListener {
         }
         ConfigLine line = config.getValues().get(Operations.EXTRACT_DAT);
         DatExtractor ec = new DatExtractor();
-        ec.extractText(new File(line.getData().get(ConfigLineType.ORIGINAL_PATH)), line.getData().get(ConfigLineType.XLS_PATH));
+        try {
+            ec.extractText(new File(line.getData().get(ConfigLineType.ORIGINAL_PATH)), line.getData().get(ConfigLineType.XLS_PATH));
+            showMessageDialog(null, "Всё корректно считалось");
+        } catch (Exception ex) {
+            showMessageDialog(null, ex.getMessage());
+        }
     }
 }
