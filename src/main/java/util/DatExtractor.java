@@ -19,19 +19,30 @@ public class DatExtractor {
     private final int[] blockStarts = new int[]{0x4f30c, 0x515cc, 0x51e46, 0x54ff8};
     private final int[] blockEnds = new int[]{0x50ea9, 0x51cab, 0x54aab, 0x55106};
 
+    public void extractMobs(File fil, String newFilename) throws IOException {
+        byte[] exe = FileUtils.readAllBytes(fil);
+        List<OneString> result = new ArrayList<>();
+        List<OneString> mobs = findMobsSeparate(exe);
+        HSSFWorkbook wb = new HSSFWorkbook();
+        HSSFCellStyle style = wb.createCellStyle();
+        style.setWrapText(true);
+        HSSFSheet sheet = wb.createSheet(fil.getName());
+
+        createHeader(style, sheet);
+        for (int stringPosition = 0; stringPosition < mobs.size(); ++stringPosition) {
+            OneStringMapper.OneStringToRow(sheet, style, mobs.get(stringPosition));
+        }
+        FileOutputStream fos = new FileOutputStream(newFilename);
+        wb.write(fos);
+        fos.close();
+        System.out.println("Extracted " + result.size() + " strings");
+    }
+
     public void extractText(File fil, String newFilename) throws IOException {
         byte[] exe = FileUtils.readAllBytes(fil);
         List<OneString> result = new ArrayList<>();
 
         List<OneString> mobs = findMobs(exe);
-
-        /*ByteArrayOutputStream baoss = new ByteArrayOutputStream();
-        for (int aa = 0x5340e; aa <= 0x5349b; aa++) {
-            baoss.write(exe[aa]);
-        }
-
-        List<String> str = new ArrayList<>();
-        CCTextConverter.bytes2string(str, baoss.toByteArray());*/
 
         int stringPosition;
         for (int a = 0; a < blockStarts.length; ++a) {
@@ -102,9 +113,33 @@ public class DatExtractor {
         System.out.println("Extracted " + result.size() + " strings");
     }
 
-    private List<OneString> findMobs(byte[] exe) throws UnsupportedEncodingException {
+    public List<OneString> findMobs(byte[] exe) throws UnsupportedEncodingException {
         int begin = 0x44e00;
         int size = begin + 0x6d70;
+        List<OneString> ret = new ArrayList<>();
+        for (int a = begin; a < size; a += 60) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            for (int b = 0; b < 16; b++) {
+                baos.write(exe[a + b]);
+            }
+            List<String> temp = new ArrayList<>();
+            CCTextConverter.bytes2string(temp, baos.toByteArray());
+            if (!temp.isEmpty() && !temp.get(0).isEmpty()) {
+                OneString str = new OneString();
+                str.setText(temp.get(0));
+                str.setOldtext(temp.get(0));
+                str.setGlobalPosition(a);
+                Offset offs = new Offset();
+                offs.setType(OffsetType.MOB);
+                str.setOffsets(List.of(offs));
+                ret.add(str);
+            }
+        }
+        return ret;
+    }
+    public List<OneString> findMobsSeparate(byte[] exe) throws UnsupportedEncodingException {
+        int begin = 0x0;
+        int size = exe.length;
         List<OneString> ret = new ArrayList<>();
         for (int a = begin; a < size; a += 60) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();

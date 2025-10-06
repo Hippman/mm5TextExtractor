@@ -26,6 +26,52 @@ import static org.apache.poi.ss.usermodel.CellType.STRING;
 public class DataCompressor {
     private int firstOffset = 0x5c310;
 
+    public void compressMobs(File dat, File xls, String outFilename) throws IOException {
+        byte[] exe = FileUtils.readAllBytes(dat);
+        List<OneString> stringMob = new ArrayList<>();
+        HSSFWorkbook wb = new HSSFWorkbook(Files.newInputStream(xls.toPath()));
+        HSSFSheet sheet = wb.getSheetAt(0);
+        Gson gson = new Gson();
+
+        Type listType = new TypeToken<ArrayList<Offset>>() {
+        }.getType();
+        for (int a = 1; a <= sheet.getLastRowNum(); a++) {
+            HSSFRow row = sheet.getRow(a);
+            OneString string = new OneString();
+            if (row == null) {
+                continue;
+            }
+            try {
+
+                if (!row.getCell(4).getStringCellValue().equals(row.getCell(3).getStringCellValue()) ||
+                        Boolean.valueOf(row.getCell(5).getStringCellValue())) {
+                    string.setText(row.getCell(4).getStringCellValue().trim());
+                    if(string.getText().isEmpty()){
+                        string.setText(" ");
+                    }
+                    string.setNeedRewrite(Boolean.valueOf(row.getCell(5).getStringCellValue()));
+                    string.setOldtext(row.getCell(3).getStringCellValue());
+                    if (row.getCell(0).getCellType() == STRING) {
+                        string.setGlobalPosition(Integer.parseInt(row.getCell(0).getStringCellValue()));
+                    } else {
+                        string.setGlobalPosition(Double.valueOf(row.getCell(0).getNumericCellValue()).intValue());
+                    }
+                    string.setOffsets(gson.fromJson(row.getCell(2).getStringCellValue(), listType));
+                    stringMob.add(string);
+                }
+            } catch (Exception ex) {
+                System.out.println(String.valueOf(a));
+            }
+        }
+        processMob(exe, stringMob);
+
+        List<Byte> datList = IntStream.range(0, exe.length).mapToObj(i -> exe[i]).collect(Collectors.toList());
+        FileOutputStream fos = new FileOutputStream(outFilename);
+        Byte[] bytes = datList.toArray(new Byte[datList.size()]);
+        fos.write(ArrayUtils.toPrimitive(bytes));
+        fos.flush();
+        fos.close();
+    }
     public void compressTexts(File dat, File xls, String outFilename) throws Exception {
         byte[] exe = FileUtils.readAllBytes(dat);
         List<OneString> stringsDb = new ArrayList<>();
@@ -49,6 +95,9 @@ public class DataCompressor {
                 if (!row.getCell(4).getStringCellValue().equals(row.getCell(3).getStringCellValue()) ||
                         Boolean.valueOf(row.getCell(5).getStringCellValue())) {
                     string.setText(row.getCell(4).getStringCellValue().trim());
+                    if(string.getText().isEmpty()){
+                        string.setText(" ");
+                    }
                     string.setNeedRewrite(Boolean.valueOf(row.getCell(5).getStringCellValue()));
                     string.setOldtext(row.getCell(3).getStringCellValue());
                     if (row.getCell(0).getCellType() == STRING) {

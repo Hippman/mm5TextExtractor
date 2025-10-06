@@ -19,4 +19,11 @@ public class ForumTranslateRow {
             translated = parts[2];
         }
     }
+    public ForumTranslateRow(String[] parts, int rowNum) {
+        if (parts.length == 2) {
+            this.rowNum = String.valueOf(rowNum);
+            original = parts[1];
+            translated = parts[2];
+        }
+    }
 }

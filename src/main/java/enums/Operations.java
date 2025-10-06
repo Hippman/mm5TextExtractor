@@ -3,7 +3,9 @@ package enums;
 public enum Operations {
     EXTRACT_DAT,
     COMPRESS_DAT,
+    COMPRESS_MOB,
     EXTRACT_XE,
+    EXTRACT_MOB,
     COMPRESS_XE,
     TRANSLATE_SMALL
 }

@@ -20,6 +20,8 @@ public class MainPanel extends JPanel implements ActionListener {
     private final JButton extractXeButtonRepeat;
     private final JButton compressXeButton;
     private final JButton translateFiles;
+    private final JButton ExtractMobs;
+    private final JButton CompressMobs;
 
 
     public MainPanel(StoredConfig config) {
@@ -44,8 +46,16 @@ public class MainPanel extends JPanel implements ActionListener {
 
         compressXeButton = new JButton("Собрать обратно XE файл");
         compressXeButton.addActionListener(new CompressXEAction(frame, config));
+
         translateFiles = new JButton("Заполнить переводами малые файлы");
         translateFiles.addActionListener(new TranslateSmallAction(frame, config));
+
+        ExtractMobs = new JButton("Экспортировать имена монстров из mon файла");
+        ExtractMobs.addActionListener(new ExtractMobsAction(frame, config));
+
+        CompressMobs = new JButton("Записать имена монстров в mon файл");
+        CompressMobs.addActionListener(new CompressMobAction(frame, config));
+
 
 
         JPanel panel = new JPanel();
@@ -58,6 +68,8 @@ public class MainPanel extends JPanel implements ActionListener {
         //panel.add(extractXeButtonRepeat);
         panel.add(compressXeButton);
         panel.add(translateFiles);
+        panel.add(ExtractMobs);
+        panel.add(CompressMobs);
         add(panel);
 
         frame = new JFrame("Might and Magic 5 file woorker");

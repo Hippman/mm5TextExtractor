@@ -106,6 +106,7 @@ public class TextFixesUtil {
 
         String str = "";
         ForumTranslateBlock curBlock = new ForumTranslateBlock();
+        int rowNum = 0;
         while (str != null) {
             try {
                 str = br.readLine();
@@ -117,15 +118,22 @@ public class TextFixesUtil {
                 continue;
             }
             String[] parts = str.split(Pattern.quote("|"));
-            if (parts.length < 3 || parts[1].isEmpty() || parts[1].equals("|")) {
+            if (parts.length < 2 || parts[1].isEmpty() || parts[1].equals("|")) {
                 continue;
             }
-            if (parts[1].equals("====")) {
+            if (parts[1].equals("====") || parts[0].equals("====")) {
                 ret.add(curBlock);
                 curBlock = new ForumTranslateBlock();
+                rowNum = 0;
             } else {
-                ForumTranslateRow row = new ForumTranslateRow(parts);
+                ForumTranslateRow row;
+                if (parts.length == 3) {
+                    row = new ForumTranslateRow(parts);
+                } else {
+                    row = new ForumTranslateRow(parts, rowNum);
+                }
                 curBlock.getRows().add(row);
+                rowNum++;
             }
         }
         return ret;
