@@ -18,6 +18,8 @@ import java.io.FileFilter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static javax.swing.JOptionPane.showMessageDialog;
+
 public class TranslateSmallAction implements ActionListener {
 
 
@@ -48,7 +50,7 @@ public class TranslateSmallAction implements ActionListener {
         }
         File trText = chooser.getSelectedFile();
 
-        /*chooser.setDialogTitle("Выбери директорию с непереведенными файлами");
+        chooser.setDialogTitle("Выбери директорию куда сохранить файлы");
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         if (cfg != null && cfg.getData().get(ConfigLineType.EN_PATH) != null) {
             chooser.setSelectedFile(new File(cfg.getData().get(ConfigLineType.EN_PATH)));
@@ -58,43 +60,18 @@ public class TranslateSmallAction implements ActionListener {
         if (retval != 0) {
             return;
         }
-        File enDir = chooser.getSelectedFile();
-
-        chooser.setDialogTitle("Выбери директорию с переведенными файлами");
-        if (cfg != null && cfg.getData().get(ConfigLineType.RU_PATH) != null) {
-            chooser.setSelectedFile(new File(cfg.getData().get(ConfigLineType.RU_PATH)));
-        }
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        retval = chooser.showOpenDialog(fram);
-        if (retval != 0) {
-            return;
-        }
-        File ruDir = chooser.getSelectedFile();
-
-        chooser.setDialogTitle("Выбери директорию куда сохранять новые файлы");
-        if (cfg != null && cfg.getData().get(ConfigLineType.ORIGINAL_PATH) != null) {
-            chooser.setSelectedFile(new File(cfg.getData().get(ConfigLineType.ORIGINAL_PATH)));
-        }
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        retval = chooser.showSaveDialog(fram);
-        if (retval != 0) {
-            return;
-        }
         File outDir = chooser.getSelectedFile();
-*/
+
         try {
-            TextFixesUtil.processForumTranslate2(trText.getAbsolutePath()/*,
-                    enDir.getAbsolutePath(),
-                    ruDir.getAbsolutePath(),
-                    outDir.getAbsolutePath()*/,"");
+            TextFixesUtil.processForumTranslate2(trText.getAbsolutePath(), outDir.getAbsolutePath());
+            showMessageDialog(null, "Всё корректно записалось");
         } catch (Exception ex) {
+            showMessageDialog(null, ex.getLocalizedMessage());
             throw new RuntimeException(ex);
         }
         cfg = new ConfigLine();
         cfg.getData().put(ConfigLineType.XLS_PATH, trText.getAbsolutePath());
-        /*cfg.getData().put(ConfigLineType.EN_PATH, enDir.getAbsolutePath());
-        cfg.getData().put(ConfigLineType.RU_PATH, ruDir.getAbsolutePath());
-        cfg.getData().put(ConfigLineType.ORIGINAL_PATH, outDir.getAbsolutePath());*/
+        cfg.getData().put(ConfigLineType.EN_PATH, outDir.getAbsolutePath());
         config.getValues().put(Operations.TRANSLATE_SMALL, cfg);
 
         Gson gson = new Gson();
