@@ -41,14 +41,14 @@ public class TranslateSmallAction implements ActionListener {
         FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV File", "csv");
         chooser.setFileFilter(filter);
         chooser.setSelectedFile(new File(cfg == null ? "translate.csv" : cfg.getData().get(ConfigLineType.XLS_PATH)));
-        chooser.setDialogTitle("Выбери afqk перевода");
+        chooser.setDialogTitle("Выбери файл перевода");
         int retval = chooser.showOpenDialog(fram);
         if (retval != 0) {
             return;
         }
         File trText = chooser.getSelectedFile();
 
-        chooser.setDialogTitle("Выбери директорию с непереведенными файлами");
+        /*chooser.setDialogTitle("Выбери директорию с непереведенными файлами");
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         if (cfg != null && cfg.getData().get(ConfigLineType.EN_PATH) != null) {
             chooser.setSelectedFile(new File(cfg.getData().get(ConfigLineType.EN_PATH)));
@@ -81,20 +81,20 @@ public class TranslateSmallAction implements ActionListener {
             return;
         }
         File outDir = chooser.getSelectedFile();
-
+*/
         try {
-            TextFixesUtil.processForumTranslate(trText.getAbsolutePath(),
+            TextFixesUtil.processForumTranslate2(trText.getAbsolutePath()/*,
                     enDir.getAbsolutePath(),
                     ruDir.getAbsolutePath(),
-                    outDir.getAbsolutePath());
+                    outDir.getAbsolutePath()*/,"");
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
         cfg = new ConfigLine();
         cfg.getData().put(ConfigLineType.XLS_PATH, trText.getAbsolutePath());
-        cfg.getData().put(ConfigLineType.EN_PATH, enDir.getAbsolutePath());
+        /*cfg.getData().put(ConfigLineType.EN_PATH, enDir.getAbsolutePath());
         cfg.getData().put(ConfigLineType.RU_PATH, ruDir.getAbsolutePath());
-        cfg.getData().put(ConfigLineType.ORIGINAL_PATH, outDir.getAbsolutePath());
+        cfg.getData().put(ConfigLineType.ORIGINAL_PATH, outDir.getAbsolutePath());*/
         config.getValues().put(Operations.TRANSLATE_SMALL, cfg);
 
         Gson gson = new Gson();
