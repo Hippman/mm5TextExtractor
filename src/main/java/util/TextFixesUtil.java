@@ -14,13 +14,20 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class TextFixesUtil {
+    private static final String[] binFileNames = {"award.bin",
+            "notes.bin",
+            "qnotes.bin",
+            "quest.bin",
+            "special.bin",
+            "spldesc.bin",
+            "tavern.bin",
+            "viewtext.bin"};
 
-
-    public static void processForumTranslate2(String translateFile, String outFoldPath) throws IOException {
+    public static void processForumTranslate2(String translateFile, String outFoldPath, int type) throws IOException {
 
         List<ForumTranslateBlock> translate = readTranslates2(translateFile);
         for (int num = 0; num < translate.size(); num++) {
-            String filename = getFilename(num);
+            String filename = getFilename(num, type);
             List<byte[]> bytes = new ArrayList<>();
 
             translate.get(num).getRows().forEach(row -> {
@@ -85,31 +92,38 @@ public class TextFixesUtil {
         return ret;
     }
 
-    private static String getFilename(int blockNumber) {
-        if (blockNumber >= 0 && blockNumber <= 98) {
-            return String.format("aaze%04d.txt", blockNumber + 1);
+    private static String getFilename(int blockNumber, int type) {
+        if (type == 0) {
+            if (blockNumber >= 0 && blockNumber <= 98) {
+                return String.format("aaze%04d.txt", blockNumber + 1);
+            }
+            if (blockNumber == 99) {
+                return "aaze2121.txt";
+            }
+            if (blockNumber >= 100 && blockNumber <= 129) {
+                return String.format("aazex%04d.txt", blockNumber);
+            }
+            if (blockNumber >= 130 && blockNumber <= 228) {
+                return String.format("dark%04d.txt", blockNumber - 129);
+            }
+            if (blockNumber == 229) {
+                return "darkmirr.txt";
+            }
+            if (blockNumber >= 230 && blockNumber <= 259) {
+                return String.format("darkx%04d.txt", blockNumber - 129);
+            }
+            if (blockNumber >= 260 && blockNumber <= 344) {
+                return String.format("xeen%04d.txt", blockNumber - 259);
+            }
+            if (blockNumber == 345) {
+                return "xeenmirr.txt";
+            }
+            return "unknown.txt";
+        } else {
+            if (binFileNames.length < blockNumber - 1) {
+                return "unknown.txt";
+            }
+            return binFileNames[blockNumber];
         }
-        if (blockNumber == 99) {
-            return "aaze2121.txt";
-        }
-        if (blockNumber >= 100 && blockNumber <= 129) {
-            return String.format("aazex%04d.txt", blockNumber);
-        }
-        if (blockNumber >= 130 && blockNumber <= 228) {
-            return String.format("dark%04d.txt", blockNumber - 129);
-        }
-        if (blockNumber == 229) {
-            return "darkmirr.txt";
-        }
-        if (blockNumber >= 230 && blockNumber <= 259) {
-            return String.format("darkx%04d.txt", blockNumber - 129);
-        }
-        if (blockNumber >= 260 && blockNumber <= 344) {
-            return String.format("xeen%04d.txt", blockNumber - 259);
-        }
-        if (blockNumber == 345) {
-            return "xeenmirr.txt";
-        }
-        return "unknown.txt";
     }
 }

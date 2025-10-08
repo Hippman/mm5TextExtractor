@@ -16,6 +16,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ public class DataCompressor {
                 if (!row.getCell(4).getStringCellValue().equals(row.getCell(3).getStringCellValue()) ||
                         Boolean.valueOf(row.getCell(5).getStringCellValue())) {
                     string.setText(row.getCell(4).getStringCellValue().trim());
-                    if(string.getText().isEmpty()){
+                    if (string.getText().isEmpty()) {
                         string.setText(" ");
                     }
                     string.setNeedRewrite(Boolean.valueOf(row.getCell(5).getStringCellValue()));
@@ -72,6 +73,7 @@ public class DataCompressor {
         fos.flush();
         fos.close();
     }
+
     public void compressTexts(File dat, File xls, String outFilename) throws Exception {
         byte[] exe = FileUtils.readAllBytes(dat);
         List<OneString> stringsDb = new ArrayList<>();
@@ -95,7 +97,7 @@ public class DataCompressor {
                 if (!row.getCell(4).getStringCellValue().equals(row.getCell(3).getStringCellValue()) ||
                         Boolean.valueOf(row.getCell(5).getStringCellValue())) {
                     string.setText(row.getCell(4).getStringCellValue().trim());
-                    if(string.getText().isEmpty()){
+                    if (string.getText().isEmpty()) {
                         string.setText(" ");
                     }
                     string.setNeedRewrite(Boolean.valueOf(row.getCell(5).getStringCellValue()));
@@ -145,8 +147,9 @@ public class DataCompressor {
         for (OneString str : mobStrings) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataUtils.string2bytes(str.getText(), baos);
-            str.setNewBytes(strToByte(str.getText()));
-            if (str.getText().length() <= 16) {
+            byte[] bs = baos.toByteArray();
+            str.setNewBytes(Arrays.copyOf(bs, bs.length-1));
+            if (str.getNewBytes().length <= 16) {
                 overwrite(exe, str.getNewBytes(), str.getGlobalPosition());
             } else {
                 String.format("русская MOB строка длинее чем 16 символов. Строка -  %s", str.getText());
@@ -261,9 +264,6 @@ public class DataCompressor {
     private void subprocessPrintfs(List<OneString> printfStrings, byte[] exe, List<TextInterval> intervals) throws Exception {
         printfStrings = sortStrings(printfStrings);
         for (int a = 0; a < printfStrings.size(); a++) {
-            if (a==50) {
-                int zz = 1;
-            }
             OneString str = printfStrings.get(a);
             if (!str.checkPercents()) {
                 System.out.printf("!! В строке неверное количество символов %%. Строка оригинал %s%n", str.getOldtext());

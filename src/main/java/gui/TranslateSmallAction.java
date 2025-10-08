@@ -7,18 +7,19 @@ import enums.ConfigLineType;
 import enums.Operations;
 import lombok.SneakyThrows;
 import util.TextFixesUtil;
-import util.XenFileWorker;
+
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileFilter;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static javax.swing.JOptionPane.showMessageDialog;
+import static javax.swing.JOptionPane.showOptionDialog;
 
 public class TranslateSmallAction implements ActionListener {
 
@@ -55,6 +56,17 @@ public class TranslateSmallAction implements ActionListener {
         if (cfg != null && cfg.getData().get(ConfigLineType.EN_PATH) != null) {
             chooser.setSelectedFile(new File(cfg.getData().get(ConfigLineType.EN_PATH)));
         }
+        String[] options = {"TXT", "BIN"};
+        int result = JOptionPane.showOptionDialog(
+                null,                                   // родительский компонент
+                "Что за файлы распаковываем?", // сообщение
+                "Выбор типа файлов",             // заголовок
+                JOptionPane.DEFAULT_OPTION,             // тип опций
+                JOptionPane.QUESTION_MESSAGE,           // тип сообщения
+                null,                                   // иконка (null - стандартная)
+                options,                                // массив кнопок
+                options[0]                              // кнопка по умолчанию
+        );
 
         retval = chooser.showOpenDialog(fram);
         if (retval != 0) {
@@ -63,7 +75,7 @@ public class TranslateSmallAction implements ActionListener {
         File outDir = chooser.getSelectedFile();
 
         try {
-            TextFixesUtil.processForumTranslate2(trText.getAbsolutePath(), outDir.getAbsolutePath());
+            TextFixesUtil.processForumTranslate2(trText.getAbsolutePath(), outDir.getAbsolutePath(), result);
             showMessageDialog(null, "Всё корректно записалось");
         } catch (Exception ex) {
             showMessageDialog(null, ex.getLocalizedMessage());
