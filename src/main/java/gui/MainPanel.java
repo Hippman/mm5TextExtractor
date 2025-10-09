@@ -24,6 +24,7 @@ public class MainPanel extends JPanel implements ActionListener {
     private final JButton CompressMobs;
 
 
+
     public MainPanel(StoredConfig config) {
         this.config = config;
         this.setLayout(new BoxLayout(this, 1));
@@ -40,11 +41,11 @@ public class MainPanel extends JPanel implements ActionListener {
         compressDatButtonRepeat = new JButton("Повторить");
         compressDatButtonRepeat.addActionListener(new CompressDatRepeatAction(frame, config));
 
-        extractXeButton = new JButton("Преобразовать в текст XE файл");
+        extractXeButton = new JButton("Преобразовать текстовый файл в XLS");
         extractXeButton.addActionListener(new ExtractXEAction(frame, config));
         extractXeButtonRepeat = new JButton("Повторить");
 
-        compressXeButton = new JButton("Собрать обратно XE файл");
+        compressXeButton = new JButton("Собрать из XLS текстовый файл");
         compressXeButton.addActionListener(new CompressXEAction(frame, config));
 
         translateFiles = new JButton("Заполнить переводами малые файлы");

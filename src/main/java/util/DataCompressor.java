@@ -26,6 +26,8 @@ import static org.apache.poi.ss.usermodel.CellType.STRING;
 
 public class DataCompressor {
     private int firstOffset = 0x5c310;
+    private int firstMobOffset = 0x3c;
+    private int nextMobOffset = 0x3c;
 
     public void compressMobs(File dat, File xls, String outFilename) throws IOException {
         byte[] exe = FileUtils.readAllBytes(dat);
@@ -36,6 +38,7 @@ public class DataCompressor {
 
         Type listType = new TypeToken<ArrayList<Offset>>() {
         }.getType();
+        int mobsCount = 0;
         for (int a = 1; a <= sheet.getLastRowNum(); a++) {
             HSSFRow row = sheet.getRow(a);
             OneString string = new OneString();
@@ -44,22 +47,18 @@ public class DataCompressor {
             }
             try {
 
-                if (!row.getCell(4).getStringCellValue().equals(row.getCell(3).getStringCellValue()) ||
-                        Boolean.valueOf(row.getCell(5).getStringCellValue())) {
-                    string.setText(row.getCell(4).getStringCellValue().trim());
-                    if (string.getText().isEmpty()) {
-                        string.setText(" ");
-                    }
-                    string.setNeedRewrite(Boolean.valueOf(row.getCell(5).getStringCellValue()));
-                    string.setOldtext(row.getCell(3).getStringCellValue());
-                    if (row.getCell(0).getCellType() == STRING) {
-                        string.setGlobalPosition(Integer.parseInt(row.getCell(0).getStringCellValue()));
-                    } else {
-                        string.setGlobalPosition(Double.valueOf(row.getCell(0).getNumericCellValue()).intValue());
-                    }
-                    string.setOffsets(gson.fromJson(row.getCell(2).getStringCellValue(), listType));
-                    stringMob.add(string);
+                string.setText(row.getCell(1).getStringCellValue().trim());
+                if (string.getText().isEmpty()) {
+                    string.setText(" ");
                 }
+                string.setNeedRewrite(true);
+                string.setOldtext(row.getCell(0).getStringCellValue());
+                string.setGlobalPosition(firstMobOffset + mobsCount * nextMobOffset);
+
+                stringMob.add(string);
+
+                mobsCount++;
+
             } catch (Exception ex) {
                 System.out.println(String.valueOf(a));
             }
@@ -148,7 +147,8 @@ public class DataCompressor {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataUtils.string2bytes(str.getText(), baos);
             byte[] bs = baos.toByteArray();
-            str.setNewBytes(Arrays.copyOf(bs, bs.length-1));
+
+            str.setNewBytes(Arrays.copyOf(bs, 16));
             if (str.getNewBytes().length <= 16) {
                 overwrite(exe, str.getNewBytes(), str.getGlobalPosition());
             } else {
