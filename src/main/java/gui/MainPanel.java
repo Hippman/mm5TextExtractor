@@ -22,6 +22,8 @@ public class MainPanel extends JPanel implements ActionListener {
     private final JButton translateFiles;
     private final JButton ExtractMobs;
     private final JButton CompressMobs;
+    private final JButton extractXeenExe;
+    private final JButton compressXeenExe;
 
 
 
@@ -57,7 +59,11 @@ public class MainPanel extends JPanel implements ActionListener {
         CompressMobs = new JButton("Записать имена монстров в mon файл");
         CompressMobs.addActionListener(new CompressMobAction(frame, config));
 
+        extractXeenExe = new JButton("Извлечь тексты из Xeen.exe");
+        extractXeenExe.addActionListener(new ExtractXeenExeAction(frame, config));
 
+        compressXeenExe = new JButton("Записать тексты в Xeen.exe");
+        compressXeenExe.addActionListener(new CompressExeAction(frame, config));
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, 1));
@@ -71,6 +77,8 @@ public class MainPanel extends JPanel implements ActionListener {
         panel.add(translateFiles);
         panel.add(ExtractMobs);
         panel.add(CompressMobs);
+        panel.add(extractXeenExe);
+        panel.add(compressXeenExe);
         add(panel);
 
         frame = new JFrame("Might and Magic 5 file woorker");

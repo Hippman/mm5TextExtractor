@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 
 public class DataUtils {
     private static Integer blockStart = 0x4c290;
+    private static Integer exeBlockStart = 0x1c6d0;
 
     public static void string2bytes(String str, ByteArrayOutputStream baos) throws UnsupportedEncodingException {
         byte[] bytes = str.getBytes(Charset.forName("cp866"));
@@ -70,6 +71,15 @@ public class DataUtils {
         ret[2] = bytes[2];
         return ret;
     }
+    public static byte[] calcExePrintfPointer(int offset) {
+        int locOffset = offset - exeBlockStart;
+        byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
+        byte[] ret = new byte[3];
+        ret[0] = 0x68;
+        ret[1] = bytes[3];
+        ret[2] = bytes[2];
+        return ret;
+    }
     public static byte[] calcPrintfB8Pointer(int offset) {
         int locOffset = offset - blockStart;
         byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
@@ -101,6 +111,15 @@ public class DataUtils {
         ret[1] = bytes[2];
         ret[2] = (byte)0xe2;
         ret[3] = (byte)0x46;
+        return ret;
+    }
+    public static byte[] calcPushPointer(int offset) {
+        byte[] ret = new byte[4];
+        int locOffset = offset - blockStart;
+        byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
+        ret[0] = bytes[3];
+        ret[1] = bytes[2];
+        ret[2] = (byte)0xb8;
         return ret;
     }
     /*

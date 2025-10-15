@@ -12,6 +12,7 @@ public class OffsetUtils {
         List<Offset> offsets = new ArrayList<>();
         offsets.addAll(getDBOffsets(exe, localAddress));
         offsets.addAll(getPrintfOffsets(exe, localAddress));
+        offsets.addAll(getPushOffsets(exe, localAddress));
         offsets.addAll(getPrintfB8Offsets(exe, localAddress));
         return offsets;
     }
@@ -24,6 +25,17 @@ public class OffsetUtils {
         search[1] = bytes[3];
         search[2] = bytes[2];
         return findOffsets(exe, search, OffsetType.PRINTF);
+    }
+
+    //Настройка поиска указателей типа Printf
+    private static List<Offset> getPushOffsets(byte[] exe, Integer localAddress) {
+        byte[] bytes = ByteBuffer.allocate(4).putInt(localAddress).array();
+        byte[] search = ByteBuffer.allocate(4).array();
+        search[0] = (byte) 0xFF;
+        search[1] = (byte) 0x36;
+        search[2] = bytes[3];
+        search[3] = bytes[2];
+        return findOffsets(exe, search, OffsetType.PUSH);
     }
     private static List<Offset> getPrintfB8Offsets(byte[] exe, Integer localAddress) {
         byte[] bytes = ByteBuffer.allocate(4).putInt(localAddress).array();
@@ -83,6 +95,7 @@ public class OffsetUtils {
         data[2] = bytes[2];
         writeOffset(exe, data, pointerAddress);
     }
+
 
     //настройка поиска указателей типа DB
     public static void writeDBOffset(byte[] exe, Integer localAddress, Integer pointerAddress, Byte first, Byte second) {
