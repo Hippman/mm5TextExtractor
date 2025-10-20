@@ -75,6 +75,7 @@ public class MainPanel extends JPanel implements ActionListener {
         compressAllTextFiles = new JButton("Собрать все текстовые файлы для CC");
         compressAllTextFiles.addActionListener(new TranslateAllCCFilesAction(frame, config));
         compressAllTextFilesRepeat = new JButton("Повторить");
+        compressAllTextFilesRepeat.addActionListener(new TranslateAllCCFilesRepeatAction(frame, config));
 
 
         JPanel panel = new JPanel();

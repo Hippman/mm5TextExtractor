@@ -92,7 +92,12 @@ public class TranslateAllCCFilesAction implements ActionListener {
         chooser.setDialogTitle("Выбери путь к Xls файлу c переводом dark.mon");
         filter = new FileNameExtensionFilter("XLS File", "xls");
         chooser.setFileFilter(filter);
-        chooser.setSelectedFile(new File(cfg == null ? "mob_names.xls" : cfg.getData().get(ConfigLineType.NEW_PATH)));
+        String filename=cfg.getData().get(ConfigLineType.MOB_NAMES_PATH);
+        if (filename==null){
+            filename="mob_names.xls";
+        }
+        chooser.setSelectedFile(new File(cfg == null ? "mob_names.xls" : filename));
+
         retval = chooser.showOpenDialog(fram);
         if (retval != 0) {
             return;
@@ -139,6 +144,7 @@ public class TranslateAllCCFilesAction implements ActionListener {
         cfg.getData().put(ConfigLineType.SPELLS_XEN_PATH, spellsxen.getAbsolutePath());
         cfg.getData().put(ConfigLineType.XEN_MON_PATH, xeenMon.getAbsolutePath());
         cfg.getData().put(ConfigLineType.EN_PATH, outDir.getAbsolutePath());
+        cfg.getData().put(ConfigLineType.MOB_NAMES_PATH, mobNames.getAbsolutePath());
         config.getValues().put(Operations.TRANSLATE_ALL, cfg);
 
         Gson gson = new Gson();
