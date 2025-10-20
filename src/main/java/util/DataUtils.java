@@ -11,55 +11,74 @@ public class DataUtils {
 
     public static void string2bytes(String str, ByteArrayOutputStream baos) throws UnsupportedEncodingException {
         byte[] bytes = str.getBytes(Charset.forName("cp866"));
+        char[] chars = str.toCharArray();
         int j = 0;
-
+        boolean lastByteFlag = false;
         for (byte cbrace = "{".getBytes()[0]; j < bytes.length; ++j) {
+            lastByteFlag = false;
             if (bytes[j] == cbrace) {
                 int nextByte = Integer.parseInt(new String(bytes, j + 1, 1), 16);
-                switch (nextByte) {
-                    case 1:
-                    case 2:
-                    case 5:
-                    case 6:
-                    case 10:
-                    case 13:
-                    case 14:
-                        baos.write(nextByte);
-                        j += 2;
-                        break;
-                    case 3:
-                    case 8:
-                        baos.write(nextByte);
-                        baos.write(bytes[j + 3]);
-                        j += 4;
-                        break;
-                    case 4:
-                    case 7:
-                    case 9:
-                    case 11:
-                        baos.write(nextByte);
-                        baos.write(bytes, j + 3, 3);
-                        j += 6;
-                        break;
-                    case 12:
-                        baos.write(nextByte);
-                        if (bytes[j + 3] == 100) {
-                            baos.write(bytes, j + 3, 1);
+                try {
+                    switch (nextByte) {
+                        case 1:
+                        case 2:
+                        case 5:
+                        case 6:
+                        case 10:
+                        case 13:
+                        case 14:
+                            baos.write(nextByte);
+                            j += 2;
+                            break;
+                        case 3:
+                        case 8:
+                            baos.write(nextByte);
+                            baos.write(bytes[j + 3]);
                             j += 4;
-                        } else {
-                            baos.write(bytes, j + 3, 2);
-                            j += 5;
-                        }
-                        break;
-                    default:
-                        j += 2;
+                            break;
+                        case 4:
+                        case 7:
+                        case 9:
+                        case 11:
+                            baos.write(nextByte);
+                            baos.write(bytes, j + 3, 3);
+                            j += 6;
+                            break;
+                        case 12:
+                            baos.write(nextByte);
+                            if (bytes[j + 3] == 100) {
+                                baos.write(bytes, j + 3, 1);
+                                j += 4;
+                            } else {
+                                baos.write(bytes, j + 3, 2);
+                                j += 5;
+                            }
+                            break;
+                        default:
+                            j += 2;
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    System.out.println(str);
                 }
             } else {
-                baos.write(bytes[j]);
+                if (chars[j] == '0' && chars.length >= j + 3 && chars[j + 1] == 'x') {
+                    char[] number = {chars[j], chars[j + 1], chars[j + 2], chars[j + 3]};
+                    String hexStr = String.valueOf(number);
+                    Integer symbol = Integer.decode(hexStr);
+                    baos.write(symbol);
+                    j += 3;
+                    lastByteFlag = true;
+                } else {
+                    baos.write(bytes[j]);
+                }
+
             }
         }
-
-        baos.write(0);
+        //Если последним мы записали 0xXX то нулевой байт не добавляем
+        if (!lastByteFlag) {
+            baos.write(0);
+        }
     }
 
     public static byte[] calcPrintfPointer(int offset) {
@@ -71,6 +90,7 @@ public class DataUtils {
         ret[2] = bytes[2];
         return ret;
     }
+
     public static byte[] calcExePrintfPointer(int offset) {
         int locOffset = offset - exeBlockStart;
         byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
@@ -80,11 +100,12 @@ public class DataUtils {
         ret[2] = bytes[2];
         return ret;
     }
+
     public static byte[] calcPrintfB8Pointer(int offset) {
         int locOffset = offset - blockStart;
         byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
         byte[] ret = new byte[3];
-        ret[0] = (byte)0xB8;
+        ret[0] = (byte) 0xB8;
         ret[1] = bytes[3];
         ret[2] = bytes[2];
         return ret;
@@ -103,23 +124,25 @@ public class DataUtils {
         ret[3] = bytes[2];
         return ret;
     }
+
     public static byte[] calcDbPrintfPointer(int offset) {
         byte[] ret = new byte[4];
         int locOffset = offset - blockStart;
         byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
         ret[0] = bytes[3];
         ret[1] = bytes[2];
-        ret[2] = (byte)0xe2;
-        ret[3] = (byte)0x46;
+        ret[2] = (byte) 0xe2;
+        ret[3] = (byte) 0x46;
         return ret;
     }
+
     public static byte[] calcPushPointer(int offset) {
         byte[] ret = new byte[4];
         int locOffset = offset - blockStart;
         byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
         ret[0] = bytes[3];
         ret[1] = bytes[2];
-        ret[2] = (byte)0xb8;
+        ret[2] = (byte) 0xb8;
         return ret;
     }
     /*

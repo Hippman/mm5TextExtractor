@@ -3,6 +3,7 @@ package gui;
 import dto.StoredConfig;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -24,7 +25,10 @@ public class MainPanel extends JPanel implements ActionListener {
     private final JButton CompressMobs;
     private final JButton extractXeenExe;
     private final JButton compressXeenExe;
+    private final JSeparator separator;
 
+    private final JButton compressAllTextFiles;
+    private final JButton compressAllTextFilesRepeat;
 
 
     public MainPanel(StoredConfig config) {
@@ -49,13 +53,13 @@ public class MainPanel extends JPanel implements ActionListener {
 
         compressXeButton = new JButton("Собрать из XLS текстовый файл");
         compressXeButton.addActionListener(new CompressXEAction(frame, config));
-
+//-
         translateFiles = new JButton("Заполнить переводами малые файлы");
         translateFiles.addActionListener(new TranslateSmallAction(frame, config));
 
         ExtractMobs = new JButton("Экспортировать имена монстров из mon файла");
         ExtractMobs.addActionListener(new ExtractMobsAction(frame, config));
-
+//-
         CompressMobs = new JButton("Записать имена монстров в mon файл");
         CompressMobs.addActionListener(new CompressMobAction(frame, config));
 
@@ -64,6 +68,14 @@ public class MainPanel extends JPanel implements ActionListener {
 
         compressXeenExe = new JButton("Записать тексты в Xeen.exe");
         compressXeenExe.addActionListener(new CompressExeAction(frame, config));
+
+        separator = new JSeparator();
+        separator.setPreferredSize(new Dimension(0, 10));
+
+        compressAllTextFiles = new JButton("Собрать все текстовые файлы для CC");
+        compressAllTextFiles.addActionListener(new TranslateAllCCFilesAction(frame, config));
+        compressAllTextFilesRepeat = new JButton("Повторить");
+
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, 1));
@@ -79,7 +91,11 @@ public class MainPanel extends JPanel implements ActionListener {
         panel.add(CompressMobs);
         panel.add(extractXeenExe);
         panel.add(compressXeenExe);
+        panel.add(separator);
+        panel.add(compressAllTextFiles);
+        panel.add(compressAllTextFilesRepeat);
         add(panel);
+
 
         frame = new JFrame("Might and Magic 5 file woorker");
         frame.addWindowListener(new WindowAdapter() {

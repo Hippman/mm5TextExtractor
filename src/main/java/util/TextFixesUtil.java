@@ -28,6 +28,9 @@ public class TextFixesUtil {
         List<ForumTranslateBlock> translate = readTranslates2(translateFile);
         for (int num = 0; num < translate.size(); num++) {
             String filename = getFilename(num, type);
+            if (filename == null) {
+                continue;
+            }
             List<byte[]> bytes = new ArrayList<>();
 
             translate.get(num).getRows().forEach(row -> {
@@ -107,7 +110,8 @@ public class TextFixesUtil {
                 return String.format("dark%04d.txt", blockNumber - 129);
             }
             if (blockNumber == 229) {
-                return "darkmirr.txt";
+                //return "darkmirr.txt";
+                return null;
             }
             if (blockNumber >= 230 && blockNumber <= 259) {
                 return String.format("darkx%04d.txt", blockNumber - 129);
@@ -116,7 +120,8 @@ public class TextFixesUtil {
                 return String.format("xeen%04d.txt", blockNumber - 259);
             }
             if (blockNumber == 345) {
-                return "xeenmirr.txt";
+                //return "xeenmirr.txt";
+                return null;
             }
             return "unknown.txt";
         } else {

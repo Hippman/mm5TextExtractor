@@ -9,5 +9,6 @@ public enum Operations {
     EXTRACT_XE,
     EXTRACT_MOB,
     COMPRESS_XE,
-    TRANSLATE_SMALL
+    TRANSLATE_SMALL,
+    TRANSLATE_ALL
 }

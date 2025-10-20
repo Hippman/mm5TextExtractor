@@ -5,5 +5,9 @@ public enum ConfigLineType {
     ORIGINAL_PATH,
     NEW_PATH,
     EN_PATH,
-    RU_PATH
+    AAZE_PATH,
+    AWARDS_PATH,
+    MAE_XEN_PATH,
+    SPELLS_XEN_PATH,
+    XEN_MON_PATH
 }
