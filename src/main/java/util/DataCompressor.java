@@ -200,11 +200,11 @@ public class DataCompressor {
                 System.out.printf("!!! Не могу перезаписать строку, она длинее оригинала. Строка оригинал %s", str.getOldtext());
             }
         });
-        List<TextInterval> intervalsDb = new ArrayList<>();
+        //List<TextInterval> intervalsDb = new ArrayList<>();
         List<TextInterval> intervalsNdb = new ArrayList<>();
         printfStrings = printfStrings.stream().filter(s -> !s.getNeedRewrite()).collect(Collectors.toList());
-        List<OneString> strsDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() == OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
-        List<OneString> strsNDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() != OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
+        //List<OneString> strsDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() == OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
+        List<OneString> strsNDB = printfStrings.stream()/*.filter(s -> s.getOffsets().get(0).getType() != OffsetType.DBPRINTF)*/.sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
         //Соберем список свободных интервалов
 
         for (OneString str : strsNDB) {
@@ -223,7 +223,7 @@ public class DataCompressor {
                 }
             }
         }
-        for (OneString str : strsDB) {
+        /*for (OneString str : strsDB) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataUtils.string2bytes(str.getText(), baos);
             str.setOldBytes(strToByte(str.getOldtext()));
@@ -238,9 +238,9 @@ public class DataCompressor {
                     intervalsDb.add(interval);
                 }
             }
-        }
+        }*/
         //Отсортируем интервалы по убыванию объема
-        intervalsDb = sortIntervals(intervalsDb);
+        //intervalsDb = sortIntervals(intervalsDb);
 
 
         //отсортируем строки по уменьшению размера нового текста
@@ -253,9 +253,9 @@ public class DataCompressor {
             TextInterval outinterval = intervalsNdb.get(intervalsNdb.size() - 1);
             printfStrings = new ArrayList<>();
             printfStrings.addAll(strsNDB);
-            printfStrings.addAll(strsDB);
-            intervalsDb.add(outinterval);
-            subprocessPrintfs(strsDB, exe, intervalsDb);
+            //printfStrings.addAll(strsDB);
+            //intervalsDb.add(outinterval);
+            //subprocessPrintfs(strsDB, exe, intervalsDb);
             intervalsNdb = sortIntervals(intervalsNdb);
             subprocessPrintfs(strsNDB, exe, intervalsNdb);
         }
