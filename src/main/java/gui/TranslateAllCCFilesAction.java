@@ -92,10 +92,11 @@ public class TranslateAllCCFilesAction implements ActionListener {
         chooser.setDialogTitle("Выбери путь к Xls файлу c переводом dark.mon");
         filter = new FileNameExtensionFilter("XLS File", "xls");
         chooser.setFileFilter(filter);
-        String filename=cfg.getData().get(ConfigLineType.MOB_NAMES_PATH);
-        if (filename==null){
-            filename="mob_names.xls";
+        String filename = "mob_names.xls";
+        if (cfg != null && cfg.getData().get(ConfigLineType.MOB_NAMES_PATH) != null) {
+            filename = cfg.getData().get(ConfigLineType.MOB_NAMES_PATH);
         }
+
         chooser.setSelectedFile(new File(cfg == null ? "mob_names.xls" : filename));
 
         retval = chooser.showOpenDialog(fram);
@@ -124,12 +125,12 @@ public class TranslateAllCCFilesAction implements ActionListener {
             TextFixesUtil.processForumTranslate2(awards.getAbsolutePath(), outDir.getAbsolutePath(), 1);
             //mae.xen
             XenFileWorker ec = new XenFileWorker();
-            ec.compressTexts(maexen,outDir.getAbsolutePath()+"/mae.xen");
+            ec.compressTexts(maexen, outDir.getAbsolutePath() + "/mae.xen");
             //spells.xen
-            ec.compressTexts(spellsxen,outDir.getAbsolutePath()+"/spells.xen");
+            ec.compressTexts(spellsxen, outDir.getAbsolutePath() + "/spells.xen");
             //xen.mon
             DataCompressor dc = new DataCompressor();
-            dc.compressMobs(xeenMon, mobNames.getAbsoluteFile(), outDir.getAbsolutePath()+"/xeen.mon");
+            dc.compressMobs(xeenMon, mobNames.getAbsoluteFile(), outDir.getAbsolutePath() + "/dark.mon");
 
 
             showMessageDialog(null, "Всё корректно записалось");
