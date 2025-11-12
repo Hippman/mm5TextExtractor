@@ -129,8 +129,8 @@ public class DataCompressor {
         }
         Integer curOffset = firstOffset;
         processMob(exe, stringMob);
-        processDb(exe, stringsDb, curOffset);
-        processPrintf(exe, stringsPrintf);
+        List<TextInterval> freeDbIntervals = processDb(exe, stringsDb, curOffset);
+        processPrintf(exe, stringsPrintf, freeDbIntervals);
         List<Byte> datList = IntStream.range(0, exe.length).mapToObj(i -> exe[i]).collect(Collectors.toList());
         FileOutputStream fos = new FileOutputStream(new File(outFilename));
         Byte[] bytes = datList.toArray(new Byte[datList.size()]);
@@ -157,7 +157,8 @@ public class DataCompressor {
         }
     }
 
-    private void processDb(byte[] exe, List<OneString> dbStrings, Integer curOffset) throws UnsupportedEncodingException {
+    private List<TextInterval> processDb(byte[] exe, List<OneString> dbStrings, Integer curOffset) throws UnsupportedEncodingException {
+        List<TextInterval> intervalsDb = new ArrayList<>();
         for (OneString str : dbStrings) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataUtils.string2bytes(str.getText(), baos);
@@ -174,9 +175,18 @@ public class DataCompressor {
                         overwrite(exe, pointer, offs.getOffset());
                     }
                     System.out.println(String.format("DB [%s] передвинута", str.getText()));
-
                     curOffset += str.getNewBytes().length;
 
+                    str.setOldBytes(strToByte(str.getOldtext()));
+                    TextInterval interval = new TextInterval(str.getGlobalPosition(), str.getOldBytes().length);
+                    if (intervalsDb.isEmpty()) {
+                        intervalsDb.add(interval);
+                    } else {
+                        Boolean status = intervalsDb.stream().map(i -> i.unityIntervals(interval)).filter(s -> s).findAny().orElse(false);
+                        if (!status) {
+                            intervalsDb.add(interval);
+                        }
+                    }
                 } else {
                     System.out.println(
                             String.format("русская DB строка длинее чем оригинал. И указано, что ее нельзя переносить. Смещение указателя - %d; Длина - %d; Длина оригинала %d; Оригинал -  %s",
@@ -184,14 +194,14 @@ public class DataCompressor {
                 }
             }
         }
+        return intervalsDb;
     }
 
-    private void processPrintf(byte[] exe, List<OneString> printfStrings) throws Exception {
+    private void processPrintf(byte[] exe, List<OneString> printfStrings, List<TextInterval> freeDbIntervals) throws Exception {
         printfStrings.stream().filter(OneString::getNeedRewrite).forEach(str -> {
             if (str.getText().length() <= str.getOldtext().length()) {
                 try {
                     str.setNewBytes(strToByte(str.getText()));
-                    //System.out.println(String.format("Строка [%s] перезаписана", str.getText()));
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException(e);
                 }
@@ -200,11 +210,10 @@ public class DataCompressor {
                 System.out.printf("!!! Не могу перезаписать строку, она длинее оригинала. Строка оригинал %s", str.getOldtext());
             }
         });
-        //List<TextInterval> intervalsDb = new ArrayList<>();
         List<TextInterval> intervalsNdb = new ArrayList<>();
+        intervalsNdb.addAll(freeDbIntervals);
         printfStrings = printfStrings.stream().filter(s -> !s.getNeedRewrite()).collect(Collectors.toList());
-        //List<OneString> strsDB = printfStrings.stream().filter(s -> s.getOffsets().get(0).getType() == OffsetType.DBPRINTF).sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
-        List<OneString> strsNDB = printfStrings.stream()/*.filter(s -> s.getOffsets().get(0).getType() != OffsetType.DBPRINTF)*/.sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
+        List<OneString> strsNDB = printfStrings.stream().sorted(Comparator.comparing(OneString::getNewSize).reversed()).collect(Collectors.toList());
         //Соберем список свободных интервалов
 
         for (OneString str : strsNDB) {
@@ -223,26 +232,6 @@ public class DataCompressor {
                 }
             }
         }
-        /*for (OneString str : strsDB) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            DataUtils.string2bytes(str.getText(), baos);
-            str.setOldBytes(strToByte(str.getOldtext()));
-            str.setNewBytes(strToByte(str.getText()));
-
-            TextInterval interval = new TextInterval(str.getGlobalPosition(), str.getOldBytes().length);
-            if (intervalsDb.isEmpty()) {
-                intervalsDb.add(interval);
-            } else {
-                Boolean status = intervalsDb.stream().map(i -> i.unityIntervals(interval)).filter(s -> s).findAny().orElse(false);
-                if (!status) {
-                    intervalsDb.add(interval);
-                }
-            }
-        }*/
-        //Отсортируем интервалы по убыванию объема
-        //intervalsDb = sortIntervals(intervalsDb);
-
-
         //отсортируем строки по уменьшению размера нового текста
         /*
         тут мы отделяем DBPRINTF от остальных и выдаем им отдеольный инервал, который ближе всего к их началу и точно вместит изменения
@@ -250,15 +239,16 @@ public class DataCompressor {
          */
 
         if (!intervalsNdb.isEmpty()) {
-            TextInterval outinterval = intervalsNdb.get(intervalsNdb.size() - 1);
             printfStrings = new ArrayList<>();
             printfStrings.addAll(strsNDB);
-            //printfStrings.addAll(strsDB);
-            //intervalsDb.add(outinterval);
-            //subprocessPrintfs(strsDB, exe, intervalsDb);
             intervalsNdb = sortIntervals(intervalsNdb);
             subprocessPrintfs(strsNDB, exe, intervalsNdb);
         }
+        System.out.println("Оставшиеся интервалы");
+        intervalsNdb.stream().filter(in -> in.getSize() > 0).forEach(in -> {
+            System.out.println(String.format("Начало = %d, Конец = %d, Размер = %d",
+                    in.getStart(), in.getEnd(), in.getSize()));
+        });
     }
 
     private void subprocessPrintfs(List<OneString> printfStrings, byte[] exe, List<TextInterval> intervals) throws Exception {
@@ -299,17 +289,6 @@ public class DataCompressor {
                 }
             }
 
-
-            /*List<OneString> sameStrings = printfStrings.stream().filter(s -> s.getGlobalPosition().equals(str.getGlobalPosition())
-                    && s.getOffsets().get(0).getOffset() != str.getOffsets().get(0).getOffset()).collect(Collectors.toList());
-            if (!sameStrings.isEmpty()) {
-                for (OneString str2 : sameStrings) {
-                    for (Offset offs : str2.getOffsets()) {
-                        overwrite(exe, pointer, offs.getOffset());
-                    }
-                    str2.setProcessed(true);
-                }
-            }*/
             for (Offset offs : str.getOffsets()) {
                 overwrite(exe, pointer, offs.getOffset());
             }
