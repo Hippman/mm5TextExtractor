@@ -7,6 +7,7 @@ import enums.ConfigLineType;
 import enums.Operations;
 import lombok.SneakyThrows;
 import util.DataCompressor;
+import util.MirrFileCompressor;
 import util.TextFixesUtil;
 import util.XenFileWorker;
 
@@ -52,6 +53,11 @@ public class TranslateAllCCFilesRepeatAction implements ActionListener {
             ec.compressTexts(new File(cfg.getData().get(ConfigLineType.SPELLS_XEN_PATH)),cfg.getData().get(ConfigLineType.EN_PATH)+"/spells.xen");
             //xen.mon
             DataCompressor dc = new DataCompressor();
+            //mirr
+            MirrFileCompressor.compressMirr(new File(cfg.getData().get(ConfigLineType.DARK_MIRR_PATH)),
+                    new File(cfg.getData().get(ConfigLineType.DARK_MIRR_TRANSLATE_PATH)),
+                    new File(cfg.getData().get(ConfigLineType.EN_PATH)+ "/darkmirr.txt"));
+
             dc.compressMobs(new File(cfg.getData().get(ConfigLineType.XEN_MON_PATH)),
                     new File(cfg.getData().get(ConfigLineType.MOB_NAMES_PATH)),
                     cfg.getData().get(ConfigLineType.EN_PATH)+"/xeen.mon");

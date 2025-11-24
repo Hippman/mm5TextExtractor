@@ -104,7 +104,7 @@ public class TextFixesUtil {
                 return "aaze2121.txt";
             }
             if (blockNumber >= 100 && blockNumber <= 129) {
-                return String.format("aazex%04d.txt", blockNumber);
+                return String.format("aazex%03d.txt", blockNumber);
             }
             if (blockNumber >= 130 && blockNumber <= 228) {
                 return String.format("dark%04d.txt", blockNumber - 129);
@@ -114,7 +114,7 @@ public class TextFixesUtil {
                 return null;
             }
             if (blockNumber >= 230 && blockNumber <= 259) {
-                return String.format("darkx%04d.txt", blockNumber - 129);
+                return String.format("darkx%03d.txt", blockNumber - 130);
             }
             if (blockNumber >= 260 && blockNumber <= 344) {
                 return String.format("xeen%04d.txt", blockNumber - 259);

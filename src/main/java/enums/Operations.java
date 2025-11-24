@@ -6,6 +6,7 @@ public enum Operations {
     COMPRESS_DAT,
     COMPRESS_EXE,
     COMPRESS_MOB,
+    COMPRESS_MIRR,
     EXTRACT_XE,
     EXTRACT_MOB,
     COMPRESS_XE,

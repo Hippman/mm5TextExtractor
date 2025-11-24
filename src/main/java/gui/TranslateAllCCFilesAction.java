@@ -7,6 +7,7 @@ import enums.ConfigLineType;
 import enums.Operations;
 import lombok.SneakyThrows;
 import util.DataCompressor;
+import util.MirrFileCompressor;
 import util.TextFixesUtil;
 import util.XenFileWorker;
 
@@ -105,6 +106,26 @@ public class TranslateAllCCFilesAction implements ActionListener {
         }
         File mobNames = chooser.getSelectedFile();
 
+
+        chooser = new JFileChooser(".txt");
+        chooser.setSelectedFile(new File(cfg == null || cfg.getData().get(ConfigLineType.DARK_MIRR_PATH) == null ? "darkmirr.txt"
+                : cfg.getData().get(ConfigLineType.DARK_MIRR_PATH)));
+        chooser.setDialogTitle("Выбери оригинальный файл MIRR (darkmirr.txt или xeenmirr.txt)");
+        retval = chooser.showOpenDialog(fram);
+        if (retval != 0) {
+            return;
+        }
+        File darkMirrEn = chooser.getSelectedFile();
+
+        chooser.setDialogTitle("Выбери путь к Xls файлу");
+        chooser.setSelectedFile(new File(cfg == null || cfg.getData().get(ConfigLineType.DARK_MIRR_TRANSLATE_PATH) == null ?
+                "stored_texts.xls" : cfg.getData().get(ConfigLineType.DARK_MIRR_TRANSLATE_PATH)));
+        retval = chooser.showOpenDialog(fram);
+        if (retval != 0) {
+            return;
+        }
+        File darkMirrXls = chooser.getSelectedFile();
+
         chooser.setDialogTitle("Выбери директорию куда сохранить файлы");
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         if (cfg != null && cfg.getData().get(ConfigLineType.EN_PATH) != null) {
@@ -131,7 +152,8 @@ public class TranslateAllCCFilesAction implements ActionListener {
             //xen.mon
             DataCompressor dc = new DataCompressor();
             dc.compressMobs(xeenMon, mobNames.getAbsoluteFile(), outDir.getAbsolutePath() + "/dark.mon");
-
+            //mirr
+            MirrFileCompressor.compressMirr(darkMirrEn, darkMirrXls, new File(outDir.getAbsolutePath() + "/darkmirr.txt"));
 
             showMessageDialog(null, "Всё корректно записалось");
         } catch (Exception ex) {
@@ -146,6 +168,8 @@ public class TranslateAllCCFilesAction implements ActionListener {
         cfg.getData().put(ConfigLineType.XEN_MON_PATH, xeenMon.getAbsolutePath());
         cfg.getData().put(ConfigLineType.EN_PATH, outDir.getAbsolutePath());
         cfg.getData().put(ConfigLineType.MOB_NAMES_PATH, mobNames.getAbsolutePath());
+        cfg.getData().put(ConfigLineType.DARK_MIRR_PATH, darkMirrEn.getAbsolutePath());
+        cfg.getData().put(ConfigLineType.DARK_MIRR_TRANSLATE_PATH, darkMirrXls.getAbsolutePath());
         config.getValues().put(Operations.TRANSLATE_ALL, cfg);
 
         Gson gson = new Gson();

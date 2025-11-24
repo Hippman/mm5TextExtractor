@@ -34,10 +34,6 @@ public class DataCompressor {
         List<OneString> stringMob = new ArrayList<>();
         HSSFWorkbook wb = new HSSFWorkbook(Files.newInputStream(xls.toPath()));
         HSSFSheet sheet = wb.getSheetAt(0);
-        Gson gson = new Gson();
-
-        Type listType = new TypeToken<ArrayList<Offset>>() {
-        }.getType();
         int mobsCount = 0;
         for (int a = 1; a <= sheet.getLastRowNum(); a++) {
             HSSFRow row = sheet.getRow(a);
@@ -114,6 +110,7 @@ public class DataCompressor {
                                 && (string.getOffsets().get(0).getType() == OffsetType.PRINTF
                                 || string.getOffsets().get(0).getType() == OffsetType.PRINTFB8
                                 || string.getOffsets().get(0).getType() == OffsetType.DBPRINTF
+                                || string.getOffsets().get(0).getType() == OffsetType.PRINTFNOB
                         )) {
                             stringsPrintf.add(string);
                         }
@@ -264,6 +261,9 @@ public class DataCompressor {
             }
             byte[] pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
             TextInterval interval = intervals.stream().filter(i -> i.getSize() >= str.getNewSize()).findFirst().orElse(null);
+            if(str.getText().contains("Камеьь")){
+                int aa=1;
+            }
             if (interval == null) {
                 System.out.println(
                         String.format("!! русская Printf строка не влезает ни в один из интервалов. Смещение указателя - %d; Длина - %d; Оригинал -  %s",
@@ -281,6 +281,10 @@ public class DataCompressor {
                 }
                 case PRINTFB8: {
                     pointer = DataUtils.calcPrintfB8Pointer(str.getGlobalPosition());
+                    break;
+                }
+                case PRINTFNOB: {
+                    pointer = DataUtils.calcPrintfNOBPointer(str.getGlobalPosition());
                     break;
                 }
                 case DBPRINTF: {

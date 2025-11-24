@@ -10,5 +10,7 @@ public enum ConfigLineType {
     MAE_XEN_PATH,
     SPELLS_XEN_PATH,
     XEN_MON_PATH,
-    MOB_NAMES_PATH
+    DARK_MIRR_PATH,
+    MOB_NAMES_PATH,
+    DARK_MIRR_TRANSLATE_PATH
 }

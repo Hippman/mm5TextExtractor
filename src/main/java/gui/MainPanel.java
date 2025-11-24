@@ -16,6 +16,7 @@ public class MainPanel extends JPanel implements ActionListener {
     private final JButton extractDatButton;
     private final JButton extractDatButtonRepeat;
     private final JButton compressDatButton;
+    private final JButton compressMirrButton;
     private final JButton compressDatButtonRepeat;
     private final JButton extractXeButton;
     private final JButton extractXeButtonRepeat;
@@ -69,6 +70,9 @@ public class MainPanel extends JPanel implements ActionListener {
         compressXeenExe = new JButton("Записать тексты в Xeen.exe");
         compressXeenExe.addActionListener(new CompressExeAction(frame, config));
 
+        compressMirrButton = new JButton("Собрать новый MIRR файл");
+        compressMirrButton.addActionListener(new CompressMirrAction(frame, config));
+
         separator = new JSeparator();
         separator.setPreferredSize(new Dimension(0, 10));
 
@@ -92,6 +96,7 @@ public class MainPanel extends JPanel implements ActionListener {
         panel.add(CompressMobs);
         panel.add(extractXeenExe);
         panel.add(compressXeenExe);
+        panel.add(compressMirrButton);
         panel.add(separator);
         panel.add(compressAllTextFiles);
         panel.add(compressAllTextFilesRepeat);

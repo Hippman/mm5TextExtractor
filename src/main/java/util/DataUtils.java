@@ -110,6 +110,14 @@ public class DataUtils {
         ret[2] = bytes[2];
         return ret;
     }
+    public static byte[] calcPrintfNOBPointer(int offset) {
+        int locOffset = offset - blockStart;
+        byte[] bytes = ByteBuffer.allocate(4).putInt(locOffset).array();
+        byte[] ret = new byte[2];
+        ret[0] = bytes[3];
+        ret[1] = bytes[2];
+        return ret;
+    }
 
     public static byte[] calcDbPointer(int offset) {
         byte[] ret = new byte[4];

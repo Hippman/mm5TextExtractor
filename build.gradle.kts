@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "vsurjenko"
-version = "1.3"
+version = "1.6"
 
 
 

@@ -6,6 +6,7 @@ public enum OffsetType {
     DB,
     MOB,
     DBPRINTF,
-    PUSH
+    PUSH,
+    PRINTFNOB
 
 }
