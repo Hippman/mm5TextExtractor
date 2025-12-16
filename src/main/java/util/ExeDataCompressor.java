@@ -67,6 +67,7 @@ public class ExeDataCompressor {
                                 && (string.getOffsets().get(0).getType() == OffsetType.PRINTF
                                 || string.getOffsets().get(0).getType() == OffsetType.PRINTFB8
                                 || string.getOffsets().get(0).getType() == OffsetType.DBPRINTF
+                                || string.getOffsets().get(0).getType() == OffsetType.PRINTFNOB
                         )) {
                             stringsPrintf.add(string);
                         }
@@ -198,15 +199,19 @@ public class ExeDataCompressor {
             intervals = sortIntervals(intervals);
             switch (str.getOffsets().get(0).getType()) {
                 case PRINTF: {
-                    pointer = DataUtils.calcExePrintfPointer(str.getGlobalPosition());
+                    pointer = DataUtils.calcPrintfPointer(str.getGlobalPosition());
                     break;
                 }
                 case PRINTFB8: {
                     pointer = DataUtils.calcPrintfB8Pointer(str.getGlobalPosition());
                     break;
                 }
-                case PUSH: {
-                    pointer = DataUtils.calcPushPointer(str.getGlobalPosition());
+                case PRINTFNOB: {
+                    pointer = DataUtils.calcPrintfNOBPointer(str.getGlobalPosition());
+                    break;
+                }
+                case DBPRINTF: {
+                    pointer = DataUtils.calcDbPrintfPointer(str.getGlobalPosition());
                     break;
                 }
             }

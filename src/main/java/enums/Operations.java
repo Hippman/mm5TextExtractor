@@ -11,5 +11,7 @@ public enum Operations {
     EXTRACT_MOB,
     COMPRESS_XE,
     TRANSLATE_SMALL,
-    TRANSLATE_ALL
+    TRANSLATE_ALL,
+    EXTRACT_BMP,
+    COMPRESS_BMP,
 }
