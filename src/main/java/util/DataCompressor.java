@@ -34,6 +34,7 @@ public class DataCompressor {
         List<OneString> stringMob = new ArrayList<>();
         HSSFWorkbook wb = new HSSFWorkbook(Files.newInputStream(xls.toPath()));
         HSSFSheet sheet = wb.getSheetAt(0);
+
         int mobsCount = 0;
         for (int a = 1; a <= sheet.getLastRowNum(); a++) {
             HSSFRow row = sheet.getRow(a);
@@ -43,13 +44,13 @@ public class DataCompressor {
             }
             try {
 
-                string.setText(row.getCell(1).getStringCellValue().trim());
+                string.setText(row.getCell(4).getStringCellValue().trim());
                 if (string.getText().isEmpty()) {
                     string.setText(" ");
                 }
                 string.setNeedRewrite(true);
-                string.setOldtext(row.getCell(0).getStringCellValue());
-                string.setGlobalPosition(firstMobOffset + mobsCount * nextMobOffset);
+                string.setOldtext(row.getCell(3).getStringCellValue());
+                string.setGlobalPosition(Integer.valueOf(row.getCell(0).getStringCellValue()));
 
                 stringMob.add(string);
 
